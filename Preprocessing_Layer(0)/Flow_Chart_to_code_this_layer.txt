@@ -1,0 +1,44 @@
+
+1) squad_preprocessor.ipynb file as inspiration to start coding this layer
+ 
+  ---> Squad_preprocessor
+   
+          ----> contructor ( __init__ )
+ : initializes the required arguments   
+          ----> load_data
+ : loads the data from the repository onto the given variable        
+          ----> break_files
+ : a) the purpose of this function is to split the json data file into workable format of context, answer and query tokens. 
+                              b) It stores the answer_start and answer_end index. If question is unanswerable the the start and end indices are saved as -1.
+                              c) the context_file, the question_file, the answer_text_file are stored in the momory as tokens.
+          ----> conduct_preprocess: This function just calls the break_files function 
+
+2)Vocabulary_builder.ipynb:
+  -----> Vocabulary 
+            -----> __init__ (constructor) : initializes the required arguments  
+            -----> create_vocabulary: This function does 4 functions:
+                       a) It creates a word_to_index vocabulary from the training questions and answers and sorts them in order of decreasing frequency.
+                       b) It creates a char_to_index vocabulary from the training questions and answers.
+                       c) creates index_to_word and index_to_char dictioanaries as well
+                       d) all the above dictionaries are stored in the memory in pickled file under the name of dictionaries.pkl
+
+
+
+3)Embedding_Matrix.ipynb
+ ------> Embedding_Matrix:
+           ------> contructor ( __init__ )
+ : initializes the required arguments. Here we load all the dictionaries from the memory
+          -------> get_glove_embeddings: It does two funtions:
+                       a) Creates a matrix of glove embeddings for words and a randomly initialized vector for character embedding
+                       b) stores the word-level and character-level embeddings in memory as pickled files
+
+         --------> index_files_using_char_to_index: creates character-level indexing for the context, answer_texts and questions for validation and training data
+         --------> index_files_using_word_to_index: creates word-level indexing for the context, answer_texts and questions for validation and training data
+         --------> index_files_to_char_level_and_word_level: calls the above two functions and pickles and stores the character and word level indices
+4)Padding the data
+--------> Data_pad:
+             -----> __init__ (constructor) : initializes the required arguments  
+             -----> find_max_length: this function finds max length of any question or context
+             ------> pad_data : 1) this function pads(pads on the right)  the questions and context word-level embeddings with zeros. and 
+                                2) stores the padded matrix in the form of a pytorch tensor and pickles the files into th memory.
+             ------> pickle_padded_sequence: calls pad_data function for validation and  training data
