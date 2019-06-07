@@ -1,17 +1,11 @@
 
 1) squad_preprocessor.ipynb file as inspiration to start coding this layer
- 
   ---> Squad_preprocessor
    
-          ----> contructor ( __init__ )
- : initializes the required arguments   
-          ----> load_data
- : loads the data from the repository onto the given variable        
-          ----> break_files
- : a) the purpose of this function is to split the json data file into workable format of context, answer and query tokens. 
-                              b) It stores the answer_start and answer_end index. If question is unanswerable the the start and end indices are saved as -1.
-                              c) the context_file, the question_file, the answer_text_file are stored in the momory as tokens.
-          ----> conduct_preprocess: This function just calls the break_files function 
+         ----> contructor ( __init__ ): initializes the required arguments   
+         ----> load_data:  loads the data from the repository onto the given variable        
+         ----> break_files : a) the purpose of this function is to split the json data file into workable format of context, answer and query tokens.               b) It stores the answer_start and answer_end index. If question is unanswerable the the start and end indices are saved as -1.            c) the context_file, the question_file, the answer_text_file are stored in the momory as tokens.
+              ----> conduct_preprocess: This function just calls the break_files function 
 
 2)Vocabulary_builder.ipynb:
   -----> Vocabulary 
