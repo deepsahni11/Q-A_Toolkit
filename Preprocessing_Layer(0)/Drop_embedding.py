@@ -39,41 +39,39 @@ class Embedding_Matrix():
             return "<unk>"
     
     def encodewords(self,typ,dataset):
-    lines=""
-    file_pat  = os.path.join(data_path, dataset+'_'+ty+'.txt')
-    read_file = codecs.open(file_pat, "r", encoding="utf-8")
-    lines =read_file.read()
-    lines=lines.split("\n")
-    en=[]
-    for line in lines:
-        w=""
-        line=line.lower()
-        words=line.split()
-        for word in words:
-            a=encode_word(word)
-            w=w+str(a)+" "
-        en.append(w)
-        #print(en)
-    cPickle.dump(en, open(os.path.join(data_path, dataset+"_encode_word_"+typ+".pkl"), "wb"))
-    
-    def encodechars(self,typ,dataset):
-    lines=""
-    file_pat  = os.path.join(data_path, dataset+'_'+typ+'.txt')
-    read_file = codecs.open(file_pat, "r", encoding="utf-8")
-    lines =read_file.read()
-    lines=lines.split("\n")
-    en=[]
-    for line in lines:
-        w=""
-        line=line.lower()
-        words=line.split()
-        for word in words:
-            for c in word:
-                a=encode_char(c)
+        lines=""
+        file_pat  = os.path.join(data_path, dataset+'_'+ty+'.txt')
+        read_file = codecs.open(file_pat, "r", encoding="utf-8")
+        lines =read_file.read()
+        lines=lines.split("\n")
+        en=[]
+        for line in lines:
+            w=""
+            line=line.lower()
+            words=line.split()
+            for word in words:
+                a=encode_word(word)
                 w=w+str(a)+" "
             en.append(w)
-        #print(en)
-    cPickle.dump(en, open(os.path.join(data_path, dataset+"_encode_char_"+typ+".pkl"), "wb"))
+        cPickle.dump(en, open(os.path.join(data_path, dataset+"_encode_word_"+typ+".pkl"), "wb"))
+    
+    def encodechars(self,typ,dataset):
+        lines=""
+        file_pat  = os.path.join(data_path, dataset+'_'+typ+'.txt')
+        read_file = codecs.open(file_pat, "r", encoding="utf-8")
+        lines =read_file.read()
+        lines=lines.split("\n")
+        en=[]
+        for line in lines:
+            w=""
+            line=line.lower()
+            words=line.split()
+            for word in words:
+                for c in word:
+                    a=encode_char(c)
+                    w=w+str(a)+" "
+                en.append(w)
+        cPickle.dump(en, open(os.path.join(data_path, dataset+"_encode_char_"+typ+".pkl"), "wb"))
     
 
     def get_glove_embeddings(self, word_embedding_size = 100, char_embedding_size = 20 , embedding_dir = "E:\\Internships_19\\Internship(Summer_19)\\Q&A_Toolkit\\Dataset_analysis\\SQuAD" ):

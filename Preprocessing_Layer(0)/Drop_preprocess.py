@@ -78,8 +78,7 @@ class Squad_preprocessor():
         for index,row in ans_df.iterrows():
             pas=row['answer']
             file.write(pas+'\n')
-        #ans_df.head()       
-        #valid_df.head()
+        
     
     def conduct_preprocess(self):
         self.break_file("train", self.train_file, True)
