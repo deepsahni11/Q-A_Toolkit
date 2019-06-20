@@ -5,7 +5,7 @@ import json
 from pandas.io.json import json_normalize
 
 
-class Squad_preprocessor():
+class Drop_preprocessor():
     def __init__(self,tokenizer,data_directory = "E:\\Internships_19\\Internship(Summer_19)\\Q&A_Toolkit\\Dataset_analysis\\DROP"):
         self.data_directory = data_directory
         self.glove_directory = "E:\\Internships_19\\Internship(Summer_19)\\Q&A_Toolkit\\Dataset_analysis\\glove.6B"
