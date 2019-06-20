@@ -21,7 +21,7 @@ from zipfile import ZipFile
 class Embedding_Matrix():
     def __init__(self,embedding_dir = "E:\\Internships_19\\Internship(Summer_19)\\Q&A_Toolkit\\Dataset_analysis\\DROP"):
 #         embedding_dir = "E:\\Internships_19\\Internship(Summer_19)\\Q&A_Toolkit\\Dataset_analysis\\SQuAD"
-        with open(r"E:\\Internships_19\\Internship(Summer_19)\\Q&A_Toolkit\\Dataset_analysis\\SQuAD\\dictionaries.pkl", "rb") as input_file:
+        with open(r"E:\\Internships_19\\Internship(Summer_19)\\Q&A_Toolkit\\Dataset_analysis\\DROP\\dictionaries.pkl", "rb") as input_file:
             dictionaries = pickle.load(input_file)
         self.word_to_index = dictionaries["word"]
         self.char_to_index = dictionaries["char"]
@@ -74,7 +74,7 @@ class Embedding_Matrix():
         cPickle.dump(en, open(os.path.join(data_path, dataset+"_encode_char_"+typ+".pkl"), "wb"))
     
 
-    def get_glove_embeddings(self, word_embedding_size = 100, char_embedding_size = 20 , embedding_dir = "E:\\Internships_19\\Internship(Summer_19)\\Q&A_Toolkit\\Dataset_analysis\\SQuAD" ):
+    def get_glove_embeddings(self, word_embedding_size = 100, char_embedding_size = 20 , embedding_dir = "E:\\Internships_19\\Internship(Summer_19)\\Q&A_Toolkit\\Dataset_analysis\\DROP" ):
 
 
 
