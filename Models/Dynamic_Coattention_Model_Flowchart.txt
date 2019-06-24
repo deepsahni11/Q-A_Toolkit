@@ -1,0 +1,60 @@
+Forward Propagation:
+
+1) main.py file:
+
+a) loads embedding matrix from memory (which stores glove embeddings)
+
+b) create an object of class DCN_Model called "model":
+   ## __init__: creates objects for 3 classes(layers) 
+                  --> "Word_Level_Encoder"
+                         --> __init__
+
+                          ## initializes hidden dimension
+                          ## initializes embedding dimension
+                          ## create a lookup dictionary for embedding matrix using nn.Embedding function. Make the embedding matrix as the parameters with no gradient update required
+                          ## set a sentinel vector as random. Make it a parameter.
+                          ## create a one-directional LSTM object
+
+                         --> forward
+
+                          ## length_per_instance (B) stores the length of context/question instances(examples) per batch
+                          ## word_sequence_embeddings (B x m x l) are created from the word indexes. It has a dimension of B x m x l
+                          ## pack_padded_sequence function is required to pack the word_sequence_embeddings into a trainable format for the LSTM.
+                          ## output_to_LSTM_padded (B x m x l) is the output of the encoder LSTM
+                          ## sentinel_zero ( B x 1 x l) is a zero vector
+                          ## output_to_LSTM_padded_with_sentinel ( B x m+1 x l) is output_to_LSTM_padded concatenated with sentinel_zero 
+
+                  --> "Coattention_Encoder" 
+                         --> __init__
+                            ## initializes hidden dimension(l)
+                            ## initializes question_proj: which is affine mapping from l ==> l
+                            ## initializes object of class Fusion_BiLSTM
+
+                         --> forward:
+                                    m = max length of instances in one batch of document
+                                    n= max length of instances in one batch of question
+
+                            ## Q : (B x (n + 1) x l) = question_representation (Output to Encoder Layer)
+                            ## D : (B x (m + 1) x l) = question_representation (Output to Encoder Layer)
+                            ## Q : (B x (n + 1) x l) ==> Q2 : (B x (n + 1) x l)(introduces tanh non-linearity) ==> Q_transpose: (B x l x (n + 1))
+                            ## L : (B x (m + 1) x (n + 1)) = matrix multiplication of D and Q_transpose
+                            ## L : (B x (m + 1) x (n + 1)) ==> A_Q : (B x (m + 1) x (n + 1))(softmax along dimension = 2) 
+                            ## L : (B x (m + 1) x (n + 1)) ==> L_tranpose :(B x (n + 1) x (m + 1)) ==> A_D :(B x (n + 1) x (m + 1))(softmax along dim = 2)
+                            ## C_Q : (B x l x (n + 1))= matrix multiplication of D_tranpose:(B x l x (m + 1)) and A_Q :(B x (m + 1) x (n + 1))
+                            ## C_D : (B x 2l x (m + 1)) = matrix multiplication of concatenated (Q_transpose,C_Q): (B x 2l x (n + 1)) and A_D:(B x (n + 1) x (m + 1))
+                            ## U (output of Coattention Layer) : (B x m x 2*l) = Fusion BiLSTM output to concatenated (C_D_tranpose and D) : (B x (m + 1) x 3l)
+                                 (Fusion BiLSTM is a bi-directional LSTM)
+                  --> "Dynamic_Decoder"
+
+                          --> __init__
+                            ## initializes max_num_of_iterations
+                            ## initializes LSTM decoder: input_size = 4*l, hidden_size = l
+                            ## creates 2 objects of class Highway_Maxout_Network: ==> max_start, max_end
+
+                          --> forward:
+                            ## start_target
+   ## forward: all the layers are called here. 
+       1) encoder layer creates passage and question representations:
+       
+       2) coattention layer creates U_matrix using passage and question repesentations 
+       3) decoder layer calculates the loss, start indices and end indices 
