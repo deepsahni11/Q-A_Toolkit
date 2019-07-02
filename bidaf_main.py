@@ -5,7 +5,7 @@ from torch import zeros, from_numpy, Tensor, LongTensor, FloatTensor
 from argparse import ArgumentParser
 import torch
 import train_model
-import model
+import bidaf_model
 class Config(object):
     pass
 	
@@ -126,7 +126,7 @@ if __name__ == '__main__':
     config.q2c_att=True
     config.c2q_att=True
     config.dynamic_att=False
-	model = model.BiDAF(config)
+	model = bidaf_model.BiDAF(config)
     
 	model().cpu()
 	 
