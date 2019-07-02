@@ -12,6 +12,9 @@ import code
 import pickle
 import os
 
+torch.manual_seed(4)
+np.random.seed(4)
+
 from Encoding_Layer_3.word_level_encoding import *
 from Cross_Interaction_Layer_4.coattention import *
 from Output_Layer_10.decoder import *
@@ -23,7 +26,7 @@ class DCN_Model(nn.Module):
     def __init__(self, hidden_dim, embedding_matrix, dropout_ratio, maxout_pool_size, max_number_of_iterations):
         super(DCN_Model, self).__init__()
 
-        self.encoder = Word_Level_Encoder(hidden_dim, emb_matrix, dropout_ratio)
+        self.encoder = Word_Level_Encoder(hidden_dim, embedding_matrix, dropout_ratio)
         self.coattention_encoder = Coattention_Encoder(hidden_dim, maxout_pool_size, embedding_matrix, max_number_of_iterations, dropout_ratio)
         self.decoder = Dynamic_Decoder(hidden_dim, maxout_pool_size, max_number_of_iterations, dropout_ratio)
 

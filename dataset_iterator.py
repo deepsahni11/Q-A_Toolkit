@@ -11,6 +11,9 @@ import time
 import os
 import pickle
 import tqdm as tqdm
+import numpy as np
+torch.manual_seed(4)
+np.random.seed(4)
 
 import numpy as np
 from six.moves import xrange
@@ -118,8 +121,8 @@ def get_batch_generator(data_dir,names, batch_size, max_context_length, max_ques
 
     """
 
-    with open(r"E:\\Internships_19\\Internship(Summer_19)\\Q&A_Toolkit\\Dataset_analysis\\SQuAD\\dictionaries.pkl", "rb") as input_file:
-            dictionaries = pickle.load(input_file)
+    with open(data_dir + "dictionaries.pkl", "rb") as input_file:
+        dictionaries = pickle.load(input_file)
     word_to_index = dictionaries["word_to_index"]
 #     if(prefix == "train"):
 

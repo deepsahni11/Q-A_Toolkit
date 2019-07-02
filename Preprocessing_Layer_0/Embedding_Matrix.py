@@ -9,7 +9,7 @@ import os
 import spacy
 # import ujson as json
 import urllib.request
-
+import numpy as np
 # from args import get_setup_args
 from codecs import open
 from collections import Counter
@@ -20,17 +20,17 @@ from zipfile import ZipFile
 
 
 class Embedding_Matrix():
-    
-    def __init__(self,embedding_dir = "E:\\Internships_19\\Internship(Summer_19)\\Q&A_Toolkit\\Dataset_analysis\\SQuAD"):
+
+    def __init__(self,embedding_dir):
 #         embedding_dir = "E:\\Internships_19\\Internship(Summer_19)\\Q&A_Toolkit\\Dataset_analysis\\SQuAD"
-        with open(r"E:\\Internships_19\\Internship(Summer_19)\\Q&A_Toolkit\\Dataset_analysis\\SQuAD\\dictionaries.pkl", "rb") as input_file:
+        with open(embedding_dir + "dictionaries.pkl", "rb") as input_file:
             dictionaries = pickle.load(input_file)
         self.word_to_index = dictionaries["word_to_index"]
         self.char_to_index = dictionaries["char_to_index"]
         self.index_to_word = dictionaries["index_to_word"]
         self.index_to_char = dictionaries["index_to_char"]
-        
-        
+
+
     def index_files_using_char_to_index(self, filename, _dict, max_words, max_chars):
 
         f = open(filename, "r", encoding="utf-8")
@@ -56,7 +56,7 @@ class Embedding_Matrix():
         return encoded_lines
 
     def index_files_using_word_to_index(self, filename, _dict, max_words):
-        
+
         f = open(filename, "r", encoding="utf-8")
 
         lines = f.readlines()
@@ -78,8 +78,8 @@ class Embedding_Matrix():
 #             print("HEllo")
 
         return encoded_lines
-    
-    def index_files_to_char_level_and_word_level(self, datapath = "E:\\Internships_19\\Internship(Summer_19)\\Q&A_Toolkit\\Dataset_analysis\\SQuAD", max_words=0, max_chars=0):
+
+    def index_files_to_char_level_and_word_level(self, datapath , max_words, max_chars):
 #         files = [".context", ".question", ".answer_text"]
         files = [".context",".question", ".answer_text"]
 
@@ -113,7 +113,7 @@ class Embedding_Matrix():
 #             write_file_valid_char = open(write_path_valid_char, "wb")
 #             pickle.dump(temp_valid_char, write_file_valid_char)
 
-    def get_glove_embeddings(self, word_embedding_size = 100, char_embedding_size = 20 , embedding_dir = "E:\\Internships_19\\Internship(Summer_19)\\Q&A_Toolkit\\Dataset_analysis\\SQuAD" ):
+    def get_glove_embeddings(self, word_embedding_size , char_embedding_size  , embedding_dir  ):
 
 
 
@@ -157,9 +157,8 @@ class Embedding_Matrix():
 
 #         self.char_embeddings = char_embeddings
 
-#         pickle.dump(char_embeddings, open(os.path.join(embedding_dir, "char_embeddings" + ".pkl"), "wb")) 
+#         pickle.dump(char_embeddings, open(os.path.join(embedding_dir, "char_embeddings" + ".pkl"), "wb"))
         pickle.dump(temp_embeddings, open(os.path.join(embedding_dir, "glove_word_embeddings" + ".pkl"), "wb"))
 
 
 #         return self.word_embeddings, self.char_embeddings
-

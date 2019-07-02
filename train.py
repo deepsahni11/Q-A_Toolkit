@@ -10,6 +10,9 @@ import logging
 import code
 import os
 
+torch.manual_seed(4)
+np.random.seed(4)
+
 class Train_Model:
 
     def __init__(self, config, model):
@@ -30,39 +33,39 @@ class Train_Model:
         self.model_dir = config.model_dir
         self.early_stop = config.early_stop
         self.print_and_validate_every = config.print_and_validate_every
-        
+
     def save_model(self, model, optimizer, loss, global_step, epoch ,prefix):
         # A state_dict is simply a Python dictionary object that maps each layer to its parameter tensor
-        
-        if(prefix == "best_model"):
-            model_state = model.state_dict()
-            model_state = {k: v for k, v in model_state.items() if 'embedding' not in k}
 
-            state = {
-                'global_step': global_step,
-                'epoch': epoch,
-                'model': model_state,
-                'optimizer': optimizer.state_dict(),
-                'current_loss': loss
-            }
-            model_save_path = os.path.join(self.model_dir, 'best_model' )
-            torch.save(state, model_save_path)
-            
-        elif(prefix == "last_model"):
-            model_state = model.state_dict()
-            model_state = {k: v for k, v in model_state.items() if 'embedding' not in k}
+        # if(prefix == "best_model"):
+        model_state = model.state_dict()
+        model_state = {k: v for k, v in model_state.items() if 'embedding' not in k}
 
-            state = {
-                'global_step': global_step,
-                'epoch': epoch,
-                'model': model_state,
-                'optimizer': optimizer.state_dict(),
-                'current_loss': loss
-            }
-            model_save_path = os.path.join(self.model_dir, 'last_model' )
-            torch.save(state, model_save_path)
-            
-            
+        state = {
+            'global_step': global_step,
+            'epoch': epoch,
+            'model': model_state,
+            'optimizer': optimizer.state_dict(),
+            'current_loss': loss
+        }
+        model_save_path = os.path.join(self.model_dir, prefix )
+        torch.save(state, model_save_path)
+
+        # elif(prefix == "last_model"):
+        #     model_state = model.state_dict()
+        #     model_state = {k: v for k, v in model_state.items() if 'embedding' not in k}
+        #
+        #     state = {
+        #         'global_step': global_step,
+        #         'epoch': epoch,
+        #         'model': model_state,
+        #         'optimizer': optimizer.state_dict(),
+        #         'current_loss': loss
+        #     }
+            # model_save_path = os.path.join(self.model_dir, prefix )
+            # torch.save(state, model_save_path)
+            #
+
     def get_f1_em_score(self, prefix, num_samples=100):
 
 
@@ -80,7 +83,7 @@ class Train_Model:
             end_pos_prediction = end_pos_prediction.tolist()
 
             for index, (pred_answer_start, pred_answer_end, true_answer_tokens) in enumerate(zip(start_pos_prediction, end_pos_prediction, batch.answer_tokens_batch)):
-                    
+
                 example_num += 1
                 pred_answer_tokens = batch.context_tokens_batch[index][pred_answer_start : pred_answer_end + 1]
                 pred_answer = " ".join(pred_answer_tokens)
@@ -92,7 +95,7 @@ class Train_Model:
                 f1_total += f1
                 em_total += em
 
-                
+
 
                 if num_samples != 0 and example_num >= num_samples:
                     break
@@ -132,18 +135,18 @@ class Train_Model:
         return validation_loss
 
     def get_data(self, batch, is_train=True):
-        
+
         question_word_index_batch = batch.question_word_index_batch
 
         context_word_index_batch = batch.context_word_index_batch
-        
+
         span_tensor_batch = batch.span_tensor_batch
 
         if is_train:
             return context_word_index_batch, question_word_index_batch,span_tensor_batch
         else:
             return context_word_index_batch, question_word_index_batch
-      
+
     def get_grad_norm(self, parameters, norm_type=2):
         parameters = list(filter(lambda p: p.grad is not None, parameters))
         total_norm = 0
@@ -160,10 +163,10 @@ class Train_Model:
             total_norm += param_norm ** norm_type
         total_norm = total_norm ** (1. / norm_type)
         return total_norm
-    
+
     def test_one_batch(self, batch):
-        
-        self.model.eval()
+
+        # self.model.eval()
 
         context_word_index_batch, question_word_index_batch,  span_tensor_batch = self.get_data(batch)
 
@@ -188,19 +191,21 @@ class Train_Model:
         question_word_mask_per_batch_new.requires_grad = False
 
         span_tensor_batch = Variable(span_tensor_batch)
-        
+
         span_tensor_batch.requires_grad = False
 
         loss,start_index_prediction, end_index_prediction = self.model(context_word_index_padded_per_batch,context_word_mask_per_batch_new, question_word_index_padded_per_batch, question_word_mask_per_batch_new, span_tensor_batch)
-    
-        self.model.train()
+
+        # self.model.train()
 
         return loss.item(),start_index_prediction, end_index_prediction
-        
+
     def train_one_batch(self, batch):
 
 
 
+
+        self.model.train()
         self.optimizer.zero_grad()
         context_word_index_batch, question_word_index_batch,  span_tensor_batch = self.get_data(batch)
 
@@ -223,41 +228,41 @@ class Train_Model:
         question_word_mask_per_batch_new.requires_grad = False
 
         span_tensor_batch = Variable(span_tensor_batch)
-        
+
         span_tensor_batch.requires_grad = False
 
         loss, _, _ = self.model(context_word_index_padded_per_batch,context_word_mask_per_batch_new, question_word_index_padded_per_batch, question_word_mask_per_batch_new, span_tensor_batch)
 
 
-        
+
 #         print(loss)
-        
+
 #         l2_reg = None
 #         for W in self.parameters:
-            
+
 #             if l2_reg is None:
 #                 l2_reg = W.norm(2)
 #             else:
 #                 l2_reg = l2_reg + W.norm(2)
 #         loss = loss + config.reg_lambda * l2_reg
-        
 
-        
+
+
         loss.backward()
-        
 
-        
+
+
         param_norm = self.get_param_norm(self.parameters_trainable)
         grad_norm = self.get_grad_norm(self.parameters_trainable)
-        
-        
+
+
 #         clip_grad_norm_(parameters, config.max_grad_norm)
         self.optimizer.step()
-    
+
 
         return loss.item(), param_norm, grad_norm
-    
-    
+
+
     def train(self):
 
 
@@ -274,23 +279,23 @@ class Train_Model:
             total_loss = 0.0
             epoch_tic = time.time()
             for batch in get_batch_generator(self.data_dir, self.names, self.batch_size, self.max_context_length, self.max_question_length,"train"):
-                
+
                 global_step += 1
                 iter_tic = time.time()
-                
+
                 train_batch_loss, param_norm, grad_norm = self.train_one_batch(batch)
 
 #                 total_loss = total_loss + loss
 #                 loss_array.append(total_loss)
-    
+
                 iter_toc = time.time()
                 iter_time = iter_toc - iter_tic
-            
+
                 if global_step % self.print_and_validate_every == 0:
-                    
+
 #                     print(self.get_validation_loss("validation"))
                     validation_batch_loss = self.get_validation_loss("validation")
-                    
+
 
 
                     train_batch_f1, train_batch_em = self.get_f1_em_score("train", num_samples=100)
@@ -308,12 +313,17 @@ class Train_Model:
                         best_validation_em = validation_batch_em
                         best_validation_epoch = epoch+1
                         self.save_model(self.model, self.optimizer, validation_batch_loss, global_step, epoch, "best_model")
-                        
+
+                    # train_batch_loss = round(train_batch_loss,3)
+                    # # validation_batch_loss = round(validation_batch_loss,3)
+                    # train_batch_f1 = round(train_batch_f1,3)
+                    # # validation_batch_f1 = round(validation_batch_f1,3)
+                    # best_validation_f1 = round(best_validation_f1,3)
                     print ("Epoch : {} Step : {} Train_batch Loss : {} Validation_batch Loss :{} " .format(epoch+1, global_step, train_batch_loss, validation_batch_loss))
-            
+
                     print("Train_batch F1:{} Train_batch EM:{} Validation_batch_F1: {} Best_validation_batch F1:{} Best_validation_batch EM :{} ".format(train_batch_f1,train_batch_em,validation_batch_f1,best_validation_f1,best_validation_em))
 
-                
+
             if (epoch - best_validation_epoch > self.early_stop):
                 break
             self.save_model(self.model, self.optimizer, train_batch_loss, global_step, epoch+1 ,"last_model")
@@ -324,4 +334,4 @@ class Train_Model:
 #             epoch_toc = time.time()
             print("End of epoch %i." % (epoch+1))
 
-        sys.stdout.flush()
+        # sys.stdout.flush()

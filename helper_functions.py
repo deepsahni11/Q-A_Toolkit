@@ -17,11 +17,11 @@ import copy
 import os.path
 # import tqdm as tqdm
 
-datapath = "E:\\Internships_19\\Internship(Summer_19)\\Q&A_Toolkit\\Dataset_analysis\\SQuAD\\"
+# datapath = "E:\\Internships_19\\Internship(Summer_19)\\Q&A_Toolkit\\Dataset_analysis\\SQuAD\\"
 
 def find_max_length(data):
 
-    """ Finds the maximum sequence length for data 
+    """ Finds the maximum sequence length for data
         Args:
             data: The data from which sequences will be chosen
     """
@@ -38,7 +38,7 @@ def find_max_length(data):
 def pad_data(data):
 
     """ Pad the data to max_length given
-        Args: 
+        Args:
             data: Data that needs to be padded
             max_length : The length to be achieved with padding
         Returns:
@@ -62,7 +62,7 @@ def pad_data(data):
 
 
 def index_files_using_word_to_index(filename, _dict, max_words):
-    
+
     f = open(filename, "r", encoding="utf-8")
 
     lines = f.readlines()
@@ -119,7 +119,7 @@ def f1_score(prediction, ground_truth):
 
 def exact_match_score(prediction, ground_truth):
     return (normalize_answer(prediction) == normalize_answer(ground_truth))
-    
-with open(r"E:\\Internships_19\\Internship(Summer_19)\\Q&A_Toolkit\\Dataset_analysis\\SQuAD\\dictionaries.pkl", "rb") as input_file:
-    dictionaries = pickle.load(input_file)
-word_to_index = dictionaries["word_to_index"]
+
+# with open(r"E:\\Internships_19\\Internship(Summer_19)\\Q&A_Toolkit\\Dataset_analysis\\SQuAD\\dictionaries.pkl", "rb") as input_file:
+#     dictionaries = pickle.load(input_file)
+# word_to_index = dictionaries["word_to_index"]
