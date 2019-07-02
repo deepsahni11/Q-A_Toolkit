@@ -119,14 +119,14 @@ class TrainModel:
             #temp_batch_gt   = temp_batch["ground_truths"]
             
                 
-        exact_match, f1 = squad_eval.evaluate(ground_truths, predictions)
-        if whole_dataset == True:
-            pickle.dump(pred, open(os.path.join(self.config.outdir, "predictions_" + name + epoch + ".pkl"), "w"))
+        #exact_match, f1 = squad_eval.evaluate(ground_truths, predictions)
+        #if whole_dataset == True:
+         #   pickle.dump(pred, open(os.path.join(self.config.outdir, "predictions_" + name + epoch + ".pkl"), "w"))
 
-        self.model.train()
-        print ("Scores are :",  exact_match, f1)
-        gc.collect()
-        return total_loss/num_steps, exact_match, f1 
+        #self.model.train()
+        #print ("Scores are :",  exact_match, f1)
+        #gc.collect()
+        return total_loss/num_steps 
 
 
     def run_epoch(self, epoch_num):
@@ -221,14 +221,14 @@ class TrainModel:
                 best_val_epoch = epoch
 
 
-            train_loss, train_f1, train_exact_match = self.eval(valid_dataset, False, "train", str(epoch))
-            print ("Epoch: {} Training Loss:  {} Training F1: {} Training Exact Match: {} ".format(epoch, train_loss, train_f1, train_exact_match))
-            print ("Epoch: {} Validation Loss:  {} Validation F1: {} Validation Exact Match: {}".format(epoch, valid_loss, valid_f1, valid_exact_match))
+            train_loss = self.eval(valid_dataset, False, "train", str(epoch))
+            print ("Epoch: {} Training Loss:  {}  ".format(epoch, train_loss))
+            print ("Epoch: {} Validation Loss:  {}".format(epoch, valid_loss))
 
             if (epoch - best_val_epoch > self.config.early_stop):
                 break
 
         self.model.load_state_dict(torch.load(open(os.path.join(outdir, "best_model"), "rb")))
         self.model.eval()
-        test_loss, test_f1, test_em = self.eval(test_dataset, True, "test", str(best_val_epoch))
-        print ("Epoch: {} Training Loss:  {} Training F1: {} Training Exact Match: {} ".format(best_val_epoch, test_loss, test_f1, test_exact_match))
+        test_loss= self.eval(test_dataset, True, "test", str(best_val_epoch))
+        print ("Epoch: {} Training Loss:  {} ".format(best_val_epoch, test_loss))
