@@ -121,7 +121,7 @@ def get_batch_generator(data_dir,names, batch_size, max_context_length, max_ques
 
     """
 
-    with open(data_dir + "dictionaries.pkl", "rb") as input_file:
+    with open(os.path.join(data_dir , "dictionaries.pkl"), "rb") as input_file:
         dictionaries = pickle.load(input_file)
     word_to_index = dictionaries["word_to_index"]
 #     if(prefix == "train"):
@@ -145,7 +145,7 @@ def get_batch_generator(data_dir,names, batch_size, max_context_length, max_ques
     answer_start_path = os.path.join(data_dir  + prefix +  ".answer_start")
     answer_start_list = open(answer_start_path, "r", encoding="utf-8").readlines()
 
-    answer_end_path = os.path.join(data_dir + "//" + prefix +  ".answer_end")
+    answer_end_path = os.path.join(data_dir + prefix +  ".answer_end")
     answer_end_list = open(answer_end_path, "r", encoding="utf-8").readlines()
 
 #     with open(data_dir + "//" + prefix +  "answer_end", "r") as input_file:

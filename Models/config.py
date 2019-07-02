@@ -5,8 +5,8 @@ class Config(object):
 
 config = Config()
 # E:\Internships_19\Internship(Summer_19)\Q&A_Toolkit\Dynamic_Coattention_Networks\Models\saved_models
-config.data_dir = "E:\\Internships_19\\Internship(Summer_19)\\Q&A_Toolkit\\Dataset_analysis\\SQuAD\\"
-config.model_dir = "E:\\Internships_19\\Internship(Summer_19)\\Q&A_Toolkit\\Dynamic_Coattention_Networks\\Models\\saved_models\\"
+config.data_dir = "Dataset_analysis/SQuAD/"
+config.model_dir = "Dynamic_Coattention_Networks/Models/saved_models/"
 config.word_embedding_size = 100
 config.hidden_dim = 100
 # config.dropout_ratio = 0.15

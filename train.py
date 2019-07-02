@@ -51,20 +51,6 @@ class Train_Model:
         model_save_path = os.path.join(self.model_dir, prefix )
         torch.save(state, model_save_path)
 
-        # elif(prefix == "last_model"):
-        #     model_state = model.state_dict()
-        #     model_state = {k: v for k, v in model_state.items() if 'embedding' not in k}
-        #
-        #     state = {
-        #         'global_step': global_step,
-        #         'epoch': epoch,
-        #         'model': model_state,
-        #         'optimizer': optimizer.state_dict(),
-        #         'current_loss': loss
-        #     }
-            # model_save_path = os.path.join(self.model_dir, prefix )
-            # torch.save(state, model_save_path)
-            #
 
     def get_f1_em_score(self, prefix, num_samples=100):
 
@@ -268,7 +254,7 @@ class Train_Model:
 
         num_parameters = sum(p.numel() for p in self.parameters_trainable)
 
-        best_validation_f1, best_validation_em = None, None
+        best_validation_f1, best_validation_em = None, 0.0
         best_validation_epoch = 0
         epoch = 0
         global_step = 0
@@ -309,7 +295,7 @@ class Train_Model:
                     if best_validation_f1 is None or validation_batch_f1 > best_validation_f1:
                         best_validation_f1 = validation_batch_f1
 
-                    if best_validation_em is None or validation_batch_em > best_validation_em:
+                    if best_validation_em is None or validation_batch_em >= best_validation_em:
                         best_validation_em = validation_batch_em
                         best_validation_epoch = epoch+1
                         self.save_model(self.model, self.optimizer, validation_batch_loss, global_step, epoch, "best_model")

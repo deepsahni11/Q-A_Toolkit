@@ -23,7 +23,7 @@ class Embedding_Matrix():
 
     def __init__(self,embedding_dir):
 #         embedding_dir = "E:\\Internships_19\\Internship(Summer_19)\\Q&A_Toolkit\\Dataset_analysis\\SQuAD"
-        with open(embedding_dir + "dictionaries.pkl", "rb") as input_file:
+        with open(os.path.join(embedding_dir , "dictionaries.pkl"), "rb") as input_file:
             dictionaries = pickle.load(input_file)
         self.word_to_index = dictionaries["word_to_index"]
         self.char_to_index = dictionaries["char_to_index"]
