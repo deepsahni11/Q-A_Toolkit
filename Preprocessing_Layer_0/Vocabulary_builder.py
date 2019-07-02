@@ -14,10 +14,15 @@ import sys
 import tqdm as tqdm
 import os
 from collections import Counter
+# import Squad_processor
+import spacy
+
+import nltk
 from argparse import ArgumentParser
 
 
 class Vocabulary():
+    
     def __init__(self, vocab_input_files = ["E:\\Internships_19\\Internship(Summer_19)\\Q&A_Toolkit\\Dataset_analysis\\SQuAD\\train.context","E:\\Internships_19\\Internship(Summer_19)\\Q&A_Toolkit\\Dataset_analysis\\SQuAD\\train.question"],
                         vocab_output_filename = "E:\\Internships_19\\Internship(Summer_19)\\Q&A_Toolkit\\Dataset_analysis\\SQuAD\\vocab.dat"):
         """
@@ -31,12 +36,31 @@ class Vocabulary():
         self.word_to_index = {} # dictionary with keys as words and values as their corresponding index number
         self.char_to_index = {} # dictionary with keys as characters and values as their corresponding index number
         self.word_to_index["<pad>"] = 0
-        self.word_to_index["<unk>"] = 1
+        self.word_to_index["<sos>"] = 1
+        self.word_to_index["<unk>"] = 2
+#         self.word_to_index["<SOS>"]
         ## self.index_to_word = # dictionary with values as words and keys as their corresponding index number
         ## self.index_to_char = # dictionary with values as characters and keys as their corresponding index number
         
     
-     
+    def normalize_answer(self,s):
+        """Lower text and remove punctuation, articles and extra whitespace."""
+
+        def remove_articles(text):
+            return re.sub(r'\b(a|an|the)\b', ' ', text)
+
+        def white_space_fix(text):
+            return ' '.join(text.split())
+
+        def remove_punc(text):
+            exclude = set(string.punctuation)
+            return ''.join(ch for ch in text if ch not in exclude)
+
+        def lower(text):
+            return text.lower()
+
+        return white_space_fix(remove_articles(remove_punc(lower(s))))
+
     
     
     def create_vocabulary(self,vocab_freq = 0, vocab_size = 30000, data_path="E:\\Internships_19\\Internship(Summer_19)\\Q&A_Toolkit\\Dataset_analysis\\SQuAD"):
@@ -54,9 +78,9 @@ class Vocabulary():
         for filename in self.vocab_input_files:
             with open(filename,'r', encoding = 'utf-8') as file_input:
                 
-                for line in tqdm.tqdm(file_input):
-                    words = line.strip().split()
-#                     print(words)
+                for line in file_input:
+                    words = self.normalize_answer(line).strip().split()
+#                     print(words)S
                     for word in words:
                         if not (word in self.vocab):
                             self.vocab[word] = 1
@@ -67,10 +91,11 @@ class Vocabulary():
             vocab_words = sorted(self.vocab,key=self.vocab.get,reverse=True)
 
 
+#         print(vocab_words)
                     
-        temp_index = 2
+        temp_index = 3
         for word in vocab_words:
-            if word not in self.word_to_index:
+            if temp_index < vocab_size and word not in self.word_to_index:
                 self.word_to_index[word] = temp_index
                 temp_index += 1
                 

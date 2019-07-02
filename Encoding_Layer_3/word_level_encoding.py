@@ -2,6 +2,8 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.autograd import Variable
+
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 import pickle
 import os
@@ -41,6 +43,12 @@ class Word_Level_Encoder(nn.Module):
         
         # creates a random vector with size= hidden_dim
         self.sentinel = nn.Parameter(torch.rand(hidden_dim,))
+        
+    def initHidden(self,batch_size):
+        h0 = Variable(torch.zeros(1, batch_size, self.hidden_dim), requires_grad = False) # Initial hidden state
+        c0 = Variable(torch.zeros(1, batch_size, self.hidden_dim), requires_grad = False) # Initial cell state
+        return h0, c0
+
 
     def forward(self, word_sequence_indexes, word_sequence_mask):
         
@@ -49,6 +57,7 @@ class Word_Level_Encoder(nn.Module):
         length_per_instance = torch.sum(word_sequence_mask, 1)
 
 
+        initial_hidden_states = self.initHidden(len(length_per_instance))
         # returns the word_sequences_embeddings with the embeddings for each token/word from word_sequence_indexes
         # word_sequence_embeddings is a tensor of dimension of B x m x l
         word_sequence_embeddings = self.embedding(word_sequence_indexes)
@@ -61,7 +70,7 @@ class Word_Level_Encoder(nn.Module):
         
         # nn.LSTM encoder gets an input of pack_padded_sequence of dimensions
         # since the input was a packed sequence, the output will also be a packed sequence
-        output, _ = self.encoder(packed_word_sequence_embeddings)
+        output, _ = self.encoder(packed_word_sequence_embeddings,initial_hidden_states)
        
         
         # Pads a packed batch of variable length sequences.

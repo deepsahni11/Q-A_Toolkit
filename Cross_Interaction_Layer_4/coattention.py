@@ -2,9 +2,14 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.autograd import Variable
+
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 import pickle
 import os
+
+
+
 
 
 class Coattention_Encoder(nn.Module):
@@ -21,12 +26,12 @@ class Coattention_Encoder(nn.Module):
 
     def forward(self, question_representation, context_representation,document_word_sequence_mask):
         
-        ####### m = max length of instances in one batch of document ;  n= max length of instances in one batch of question
+        ############## m = max length of instances in one batch of document ;  n= max length of instances in one batch of question ############################33
         Q = question_representation # B x (n + 1) x l
         D = context_representation  # B x (m + 1) x l
         
-        print("question_representation.(Output to Encoder Layer) ==  " + str(Q.size()))
-        print("context_representation. (Output to Encoder Layer)  ==  " + str(D.size()))
+#         print("question_representation.(Output to Encoder Layer) ==  " + str(Q.size()))
+#         print("context_representation. (Output to Encoder Layer)  ==  " + str(D.size()))
 
         # view function is meant to reshape the tensor.(Similar to reshape function in numpy)
         # view( row_size = -1 ,means that number of rows are unknown, column_size)
@@ -67,7 +72,7 @@ class Coattention_Encoder(nn.Module):
        
         U = self.fusion_bilstm(bi_lstm_input, document_word_sequence_mask) # B x m x 2l
         
-        print("size of U.(U is output of Co-attention encoder) ==  " + str(U.size()))
+#         print("size of U.(U is output of Co-attention encoder) ==  " + str(U.size()))
         
         return U
 
@@ -76,6 +81,7 @@ class Fusion_BiLSTM(nn.Module):
     def __init__(self, hidden_dim, dropout_ratio):
         super(Fusion_BiLSTM, self).__init__()
         
+        self.hidden_dim = hidden_dim
          # batch_first = True
         # Input: has a dimension of B * m * embedding_dim
         # Function parameters: input_size, hidden_size, num_layers_of_LSTM = 1(here)
@@ -84,18 +90,24 @@ class Fusion_BiLSTM(nn.Module):
         
 #         self.dropout = nn.Dropout(p=dropout_ratio)
 
+    def initHidden(self,batch_size):
+        h0 = Variable(torch.zeros(2, batch_size, self.hidden_dim), requires_grad = False) # Initial hidden state
+        c0 = Variable(torch.zeros(2, batch_size, self.hidden_dim), requires_grad = False) # Initial cell state
+        return h0, c0
+
     def forward(self, word_sequence_embeddings, word_sequence_mask):
         
         # stores length of per instance for context/question
         length_per_instance = torch.sum(word_sequence_mask, 1)
         
+        initial_hidden_states = self.initHidden(len(length_per_instance))
       
         # All RNN modules accept packed sequences as inputs.
         # Input: word_sequence_embeddings has a dimension of B x m+1 x 3l (l is the size of the glove_embedding/ pre-trained embedding/embedding_dim)
         packed_word_sequence_embeddings = pack_padded_sequence(word_sequence_embeddings, length_per_instance, batch_first=True,enforce_sorted=False)
         
         # since the input was a packed sequence, the output will also be a packed sequence
-        output, _ = self.fusion_bilstm(packed_word_sequence_embeddings)
+        output, _ = self.fusion_bilstm(packed_word_sequence_embeddings,initial_hidden_states)
         
         # Pads a packed batch of variable length sequences.
         # It is an inverse operation to pack_padded_sequence().
