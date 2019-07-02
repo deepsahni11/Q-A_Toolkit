@@ -5,20 +5,20 @@ import torch.nn.functional as F
 import numpy as np
 import logging
 import code
-import _pickle as Cpickle
+import _pickle as pickle
 import os
 from torch import autograd
-import embedding 
-import encoding_layer 
-import bilinear_compute
-import encoding_combination_layer
-import query_aware_document_representation
-import document_aware_query_representation
-import self_match
+import Embedding_Layer(1).embedding as embedding
+import Encoding_Layer_3.encoding_layer as encoding_layer
+import Cross_Interaction_Layer_4.bilinear_compute as bilinear_compute
+import Embedding_Combination_Layer(2).encoding_combination_layer as encoding_combination_layer
+import Cross_Interaction_Layer_4.query_aware_document_representation as query_aware_document_representation
+import Cross_Interaction_Layer_4.document_aware_query_representation as document_aware_query_representation
+import Self-Interaction_Layer(5).self_match as self_match
 import dataset_iterator_squad
-import predict_start
-import predict_end
-import mid_processingoutputlayer
+import Output_Layer_10.predict_start as predict_start
+import Output_Layer_10.predict_end as predict_end
+import Output_Layer_10.mid_processingoutputlayer as mid_processingoutputlayer
 import torch.nn.functional as F
 from numpy import genfromtxt
 from torch.autograd import Variable
@@ -193,5 +193,5 @@ class BiDAF(nn.Module):
 
         mid_process  = self.mid_processingoutputlayer(self_match_representation[1])
         end_logits   = self.predict_end_logits(self_match_representation[0], mid_process)
-        gc.collect()
+        #gc.collect()
         return start_logits, end_logits
