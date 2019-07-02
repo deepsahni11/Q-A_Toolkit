@@ -5,7 +5,7 @@ import torch.nn.functional as F
 import numpy as np
 import logging
 import code
-import pickle
+import _pickle as Cpickle
 import os
 from torch import autograd
 import embedding 
