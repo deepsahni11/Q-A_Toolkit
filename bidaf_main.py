@@ -126,9 +126,10 @@ if __name__ == '__main__':
     config.q2c_att=True
     config.c2q_att=True
     config.dynamic_att=False
-	model = model.BiDAF(config)
+	
+    model = model.BiDAF(config)
     
-	model().cpu()
+    model().cpu()
 	 
     train_model = train_model.TrainModel(config, model)
 
