@@ -16,7 +16,7 @@ if __name__ == '__main__':
     config.max_sent_size=740
     config.max_ques_size=36
     config.num_layers=1
-    config.word_vocab_size=46531
+    config.word_vocab_size=40000
     config.char_vocab_size=74
     config.max_word_size=15
     config.glove_vec_size=100
@@ -30,7 +30,7 @@ if __name__ == '__main__':
     config.mid_processing='bidaf'
     config.is_train='True'
     config.resume='False'
-    config.epochs=12
+    config.epochs=10
 
     config.model_name="basic"
     config.data_dir="D:/Downloads/SQuAD/"
