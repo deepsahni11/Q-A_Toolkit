@@ -75,7 +75,10 @@ class TrainModel:
         total_loss = 0
         for i in range(num_steps):
 
-            temp_batch = self.dataset_iterator.next_batch(dataset, self.config.batch_size, is_train=False)
+            if name is "train" or name is "validation":
+                temp_batch = self.dataset_iterator.next_batch(dataset, 5, is_train=True)
+            else:    
+                temp_batch = self.dataset_iterator.next_batch(dataset, 5, is_train=False)
 
             answer_start_batch = Variable(torch.LongTensor(temp_batch["answer_start"]))
             answer_start_batch = torch.squeeze(answer_start_batch)
@@ -113,7 +116,7 @@ class TrainModel:
                 
                 temp = temp_batch_data[i][0]
                 
-                ans = temp[begin:end + 1]
+                ans = temp
                 ans = "".join(str(ans))
                 
                 if whole_dataset == False:
@@ -170,15 +173,7 @@ class TrainModel:
             self.update_param(step_loss)
             print ("Epoch : {} Step : {} Loss :{}".format(epoch_num, i, step_loss.data))
             total_loss += step_loss.data
-            if ((i+1) % 100 == 0):
-
-                print ("Step Loss {}" % step_loss)
-
-                if ( (i + 1) / (10 * 100) == 0):
-                    valid_loss = self.eval(valid_dataset, whole_dataset=False)
-                    test_loss = self.eval(test_dataset, whole_dataset=False)
-                    print ("Epoch : {} Step : {} Validation Loss : {} Test Loss " .format(epoch_num, i, valid_loss, test_loss))
-
+            
             del temp_batch, step_loss, answer_start_batch, answer_end_batch, begin_logits, end_logits,  content_batches, query_batches
             #gc.collect()  
         return total_loss/(num_steps)
@@ -190,7 +185,7 @@ class TrainModel:
 
         self.load_data(outdir)
 
-
+	train_dataset = self.dataset_iterator.dataset["train"]
         valid_dataset = self.dataset_iterator.dataset["validation"]
         test_dataset  = self.dataset_iterator.dataset["test"]
 
