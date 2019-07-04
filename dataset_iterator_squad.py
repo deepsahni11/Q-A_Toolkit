@@ -129,7 +129,7 @@ class DataBatch:
     def make_batch_gt(self, data, batch_size, idx):
         batch = []
         batch = data[idx:idx + batch_size]
-        idx = idx 
+        idx = idx + batch_size
         while(len(batch) < batch_size):
             batch.append([""])
             idx = 0
@@ -203,22 +203,7 @@ class DataBatch:
                             temp_batch[i][j][k] = temp1[k]
 
         return np.asarray(temp_batch), idx
-        """
-        mod_batch = []
-        for b in batch:
-            temp = self.pad_data_char(b, num_of_words, max_chars=16)
-            print (np.shape(temp))
-            mod_batch.append(temp)
-        while (len(mod_batch) < batch_size):
-            mod_batch.append(np.zeros((num_of_words, num_chars), dtype = int))
-            idx = 0
-            
-        #mod_batch = self.pad_data(mod_batch,idx, batch_size)
-        #batch = np.transpose(mod_batch)
-        batch = np.asarray(mod_batch)
-        print ("Token char", num_of_words, np.shape(batch), len(np.shape(batch)))
-        return batch, idx
-        """
+        
 
     
     def next_batch(self, dt, batch_size, is_train=True):
