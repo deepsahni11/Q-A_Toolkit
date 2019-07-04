@@ -1,4 +1,4 @@
-﻿import torch
+import torch
 import torch.optim as optim
 import torch.nn as nn
 import torch.nn.functional as F
@@ -6,6 +6,7 @@ import numpy as np
 import logging
 import code
 import gc
+import dataset_iterator_drop
 
 import Embedding_Layer(1).embedding as embedding
 import Encoding_Layer_3.encoding_layer as encoding_layer
@@ -18,11 +19,9 @@ import dataset_iterator_squad
 import Output_Layer_10.predict_start as predict_start
 import Output_Layer_10.predict_end as predict_end
 import Output_Layer_10.mid_processingoutputlayer as mid_processingoutputlayer
-#import dataset_iterator_drop
-#import dataset_iterator_squad
 
 import os 
-#import squad_eval
+import squad_eval
 from numpy import genfromtxt
 from torch.autograd import Variable
 from torch.nn import Embedding
@@ -55,15 +54,6 @@ class TrainModel:
         self.optimizer.step()
 
 
-    #def init_vocab(self, data_dir = "../data", embedding_dir="../embeddings"):
-       # self.vocab = Vocab(self.config.token_filenames, self.config.pos_filenames, self.config.ner_filenames, config.vocab_size)
-        #self.word_embeddings, self.char_embeddings, self.pos_embeddings, self.ner_embeddings = self.vocab.get_pretrained_embeddings(word_embedding_size = self.config.word_embed_size,
-         #                                          char_embedding_size=self.char_embed_size,
-         #                                          embedding_dir = embedding_dir)
-
-    #self.word_embeddings = pickle.load(open(os.path.join(embedding_dir , "embeddings_word50.pkl"))
-        
-        #self.vocab.convert_all_files(data_dir)
 
     def load_data(self, data_dir="D:/Downloads/SQuAD/"):
 
@@ -89,10 +79,10 @@ class TrainModel:
 
             answer_start_batch = Variable(torch.LongTensor(temp_batch["answer_start"]))
             answer_start_batch = torch.squeeze(answer_start_batch)
-            #answer_start_batch.requires_grad = False
+            
             answer_end_batch = Variable(torch.LongTensor(temp_batch["answer_end"]))
             answer_end_batch = torch.squeeze(answer_end_batch)
-            #answer_end_batch.requires_grad = False
+            
 
             content_batches = temp_batch["content"]
             for l,v in content_batches.items():
@@ -107,7 +97,8 @@ class TrainModel:
 
 
             pred_start, pred_end = self.model(content_batches, query_batches)
-            self_loss = self.loss_fn(pred_start, answer_start_batch) + self.loss_fn(pred_end, answer_end_batch)
+            step_loss = self.loss_fn(pred_start, answer_start_batch)
+            step_loss += self.loss_fn(pred_end, answer_end_batch)
             total_loss += self_loss.data
 
             _, pred_begin = torch.max(pred_start, 1)
@@ -115,18 +106,28 @@ class TrainModel:
 
             pred = torch.stack([pred_begin, pred_end], dim=1)
 
-            #temp_batch_data = temp_batch["context_words"]
-            #temp_batch_gt   = temp_batch["ground_truths"]
+            temp_batch_data = temp_batch["context_words"]
             
+            temp_batch_gt   = temp_batch["ground_truths"]
+            for i, (begin, end) in enumerate(pred.cpu().data.numpy()):
                 
-        #exact_match, f1 = squad_eval.evaluate(ground_truths, predictions)
-        #if whole_dataset == True:
-         #   pickle.dump(pred, open(os.path.join(self.config.outdir, "predictions_" + name + epoch + ".pkl"), "w"))
-
-        #self.model.train()
-        #print ("Scores are :",  exact_match, f1)
+                temp = temp_batch_data[i][0]
+                
+                ans = temp[begin:end + 1]
+                ans = "".join(str(ans))
+                
+                if whole_dataset == False:
+                    print ("Pred: " , ans, " GT : " , temp_batch_gt[i])
+                predictions.append(ans)
+                ground_truths.append(temp_batch_gt[i])
+        
+        exact_match, f1 = evaluate(ground_truths, predictions)
+        
+        self.model.train()
+        print ("Scores of {} are : {} {} ".format(name,f1,exact_match))
         #gc.collect()
-        return total_loss/num_steps 
+        return total_loss/num_steps, f1,exact_match 
+
 
 
     def run_epoch(self, epoch_num):
@@ -142,8 +143,7 @@ class TrainModel:
             self.model.zero_grad()
             temp_batch = self.dataset_iterator.next_batch(train_dataset, self.config.batch_size, is_train=True)
 
-            #xx = np.asarray(temp_batch["answer_start"])
-            #print (np.shape(xx),len(xx))
+            
 
             answer_start_batch = Variable(torch.LongTensor(temp_batch["answer_start"]))
             answer_start_batch = torch.squeeze(answer_start_batch)
@@ -188,7 +188,6 @@ class TrainModel:
 
         outdir = self.outdir
 
-        #self.init_vocab(self.config.data_dir,1000, 50,  self.config.emb_dir)
         self.load_data(outdir)
 
 
@@ -207,7 +206,7 @@ class TrainModel:
             best_valid_f1  = 0
             best_valid_exact_match = 0
 
-        for epoch in range(3):
+        for epoch in range(self.config.epochs):
 
             train_loss = self.run_epoch(epoch)
 
@@ -221,14 +220,14 @@ class TrainModel:
                 best_val_epoch = epoch
 
 
-            train_loss = self.eval(valid_dataset, False, "train", str(epoch))
-            print ("Epoch: {} Training Loss:  {}  ".format(epoch, train_loss))
-            print ("Epoch: {} Validation Loss:  {}".format(epoch, valid_loss))
+            train_loss, train_f1, train_exact_match = self.eval(valid_dataset, False, "train", str(epoch))
+            print ("Epoch: {} Training Loss:  {} Training F1: {} Training Exact Match: {} ".format(epoch, train_loss, train_f1, train_exact_match))
+            print ("Epoch: {} Validation Loss:  {} Validation F1: {} Validation Exact Match: {}".format(epoch, valid_loss, valid_f1, valid_exact_match))
 
             if (epoch - best_val_epoch > self.config.early_stop):
                 break
 
         self.model.load_state_dict(torch.load(open(os.path.join(outdir, "best_model"), "rb")))
         self.model.eval()
-        test_loss= self.eval(test_dataset, True, "test", str(best_val_epoch))
-        print ("Epoch: {} Training Loss:  {} ".format(best_val_epoch, test_loss))
+        test_loss, test_f1, test_em = self.eval(test_dataset, True, "test", str(best_val_epoch))
+        print ("Epoch: {} Test Loss:  {} Training F1: {} Training Exact Match: {} ".format(best_val_epoch, test_loss, test_f1, test_exact_match))

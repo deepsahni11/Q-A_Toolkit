@@ -6,9 +6,9 @@ import sys
 import copy
 import os.path
 #import tensorflow as tf
-#from vocab import *
+from vocab import *
 #import Drop_padding 
-    
+
 def generate_answer(content_word_list, answer_start, answer_end):
 
     if (answer_end < answer_start):
@@ -20,7 +20,7 @@ def generate_answer(content_word_list, answer_start, answer_end):
 
 class DataSplit:
 
-    def __init__(self, name, content_features, query_features, answer_start, answer_end, no_of_sample):
+    def __init__(self, name, content_features, query_features, answer_start, answer_end, ground_truths,no_of_sample):
 
         self.name   = name
         self.content_features = content_features
@@ -28,7 +28,7 @@ class DataSplit:
         self.answer_start = answer_start
         self.answer_end = answer_end
         self.number_of_examples = no_of_sample 
-        #self.ground_truths = ground_truths
+        self.ground_truths = ground_truths
 
         self.global_count_train = 0
         self.global_count_test  = 0
@@ -49,12 +49,13 @@ class DataBatch:
                 query_features["token"+j]   = cPickle.load(open(os.path.join(data_dir, i + ".question_" + j + "pkl.pkl"),"rb"))
                 answer_start        = cPickle.load(open(os.path.join(data_dir, i + ".answer_start.txt_pkl.pkl"),"rb"))
                 answer_end          = cPickle.load(open(os.path.join(data_dir, i + ".answer_end.txt_pkl.pkl"),"rb"))
-                #ground_truths       = cPickle.load(open(os.path.join(data_dir, i + "_ground_truths.txt_pkl.pkl")))
+                ground_truths       = cPickle.load(open(os.path.join(data_dir, i + ".answer_text.txt_pkl.pkl"),"rb"))
                 no_of_samples       = len(answer_end)
-            #content_features["context_words"]       = cPickle.load(open(os.path.join(data_dir, i + "_context_words.txt_pkl.pkl")))
+            content_features["context_words"]       = cPickle.load(open(os.path.join(data_dir, i + ".context_context_words_pkl.pkl"),"rb"))
             self.dataset[i]         = DataSplit(name = i,content_features=content_features, query_features=query_features, 
-                                        answer_start = answer_start, answer_end = answer_end, 
+                                        answer_start = answer_start, answer_end = answer_end, ground_truths = ground_truths,
                                         no_of_sample=no_of_samples)
+            #print(ground_truths[0])
     
     def find_max_length(self, data, idx, batch_size):
 
@@ -123,6 +124,17 @@ class DataBatch:
 
         #batch = np.transpose(batch)
         batch = np.asarray(batch)
+        return batch, idx
+    
+    def make_batch_gt(self, data, batch_size, idx):
+        batch = []
+        batch = data[idx:idx + batch_size]
+        idx = idx 
+        while(len(batch) < batch_size):
+            batch.append([""])
+            idx = 0
+
+        #print(batch)
         return batch, idx
     
     def pad_data_char(self, data, num_of_words, max_chars):
@@ -247,9 +259,11 @@ class DataBatch:
         answer_start, _ = self.make_batch(dt.answer_start, batch_size, idx, max_length = 1)
         answer_end, _   = self.make_batch(dt.answer_end, batch_size, idx, max_length = 1)
         
-        #ground_truths, _ = self.make_batch_gt(dt.ground_truths, batch_size, idx)
-        #context_words, _ = self.make_batch_gt(dt.content_features["context_words"], batch_size, idx)
-
+        ground_truths, _ = self.make_batch_gt(dt.ground_truths, batch_size, idx)
+        context_words, _ = self.make_batch_gt(dt.content_features["context_words"], batch_size, idx)
+        
+        #print(ground_truths)
+        
         if (is_train == True): 
             dt.global_count_train = idx_temp % dt.number_of_examples
         else:
@@ -257,5 +271,8 @@ class DataBatch:
         
         #rint (content_batches["token"])
         #print ("New INdex", idx)
-        return {"content": content_batches, "query" : query_batches, "answer_start" : answer_start, "answer_end": answer_end}
+        #print(ground_truths)
+        #print(context_words)
+        return {"content": content_batches, "query" : query_batches, "answer_start" : answer_start, "answer_end": answer_end,"ground_truths": ground_truths, "context_words": context_words}
 
+  
