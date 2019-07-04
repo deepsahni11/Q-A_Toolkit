@@ -5,7 +5,7 @@ from torch import zeros, from_numpy, Tensor, LongTensor, FloatTensor
 from argparse import ArgumentParser
 import torch
 import train_model
-import model
+import Models.bidaf_model as model
 class Config(object):
     pass
 	
