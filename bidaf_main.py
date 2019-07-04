@@ -11,7 +11,7 @@ class Config(object):
 	
 if __name__ == '__main__':	
 
-	config.max_num_sent=1
+    config.max_num_sent=1
     config.max_num_sent_words=740
     config.max_sent_size=740
     config.max_ques_size=36
@@ -73,7 +73,7 @@ if __name__ == '__main__':
     config.out_channel_dims="100"
     config.filter_heights="5"
     config.finetune=False
-    config.highway"=True
+    config.highway=True
     config.highway_num_layers=2
     config.share_cnn_weights=True
     config.share_lstm_weights=True
