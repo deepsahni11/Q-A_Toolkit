@@ -26,7 +26,7 @@ if __name__ == '__main__':
     config.early_stop=5
 
     config.documentAwareQuery_method='method1'
-    config.queryAwareDocument_method='method_2'
+    config.queryAwareDocument_method='method2'
     config.mid_processing='bidaf'
     config.is_train='True'
     config.resume='False'
