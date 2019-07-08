@@ -31,8 +31,8 @@ def f1_score(prediction, ground_truth):
     num_same = sum(common.values())
     if num_same == 0:
         return 0
-    precision = 1.0 * num_same / len(prediction_tokens)
-    recall = 1.0 * num_same / len(ground_truth_tokens)
+    precision = num_same / len(prediction_tokens)
+    recall =  num_same / len(ground_truth_tokens)
     f1 = (2 * precision * recall) / (precision + recall)
     return f1
 
@@ -63,5 +63,7 @@ def evaluate(ground_truths, predictions):
 
     exact_match = 100.0 * exact_match /total
     f1 = 100.0 * f1 / total
+    if f1>1:
+        f1=f1/10
 
     return exact_match, f1
