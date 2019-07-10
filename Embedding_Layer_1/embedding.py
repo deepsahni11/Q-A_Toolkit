@@ -67,7 +67,7 @@ class Embedding_layer(nn.Module):
 class _CharLevelEmbeddingCNN(nn.Module):
 
     def __init__(self,config,initial_char_embedding):
-        super(CharLevelEmbeddingCNN, self).__init__()
+        super(_CharLevelEmbeddingCNN, self).__init__()
 
 
         self.char_embed_mat_initial = nn.Embedding(config.char_vocab_size, embedding_dim=config.char_emb_size, padding_idx = config.padding_idx)
@@ -85,6 +85,7 @@ class _WordLevelEmbedding(nn.Module):
 
     def __init__(self,config, initial_word_embedding):
 
+        super(_WordLevelEmbedding, self).__init__()
         self.word_embedding = nn.Embedding(config.vocab_size, embedding_dim = config.word_embedding_size)
         self.word_embedding.weight.data.copy(initial_word_embedding)
 
