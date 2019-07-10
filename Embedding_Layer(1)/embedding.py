@@ -3,6 +3,10 @@ from torch.nn.utils.rnn import pack_padded_sequence
 import torch
 import torch.nn.functional as F
 
+# class WordEmbedding:
+#     def ()
+# return , input
+#
 def get_rnn(rnn_type):
     rnn_type = rnn_type.lower()
     if rnn_type == "gru":
