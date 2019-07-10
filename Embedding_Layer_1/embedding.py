@@ -6,12 +6,16 @@ from helper import *
 """
 Embedding(it is a super class that creates objects of other embedding classes):
 1) __init__ function: creates objects of classes a) CharLevelEmbeddingCNN b) WordLevelEmbedding
+  INPUTS for forward: word_tensor, char_tensor
+  OUTPUTS from forward: return word_level_embedding, character_level_cnn embedding ( N x W x Dim) where N is batch size, W : sequence length
   a) CharLevelEmbeddingCNN:
-     INPUTS: is_train(boolean),keep_prob(1- drop_out_probability), kernel_dim(output channel size) , kernel_size(tuple containing (filter_height ,filter_width) ) , embedding_dim(input channel size), initial_char_embedding
-     OUTPUT: character_level_cnn embedding
+     INPUTS_from_config: is_train(boolean),keep_prob(1- drop_out_probability), kernel_dim(output channel size) , kernel_size(tuple containing (filter_height ,filter_width) ) , embedding_dim(input channel size), initial_char_embedding
+     INPUTS for forward ()  : char_tensor
+     OUTPUT from forward ():  return character_level_cnn embedding ( N x W x Dim) where N is batch size, W : sequence length
   b) WordLevelEmbedding:
-     INPUTS: vocab_size(int), word_embedding_size, initial_word_embedding ,padding_idx , fine_tune
-     OUTPUTS: word level embedding
+     INPUTS from config: vocab_size(int), word_embedding_size, initial_word_embedding ,padding_idx , fine_tune
+     INPUTS for forward() : word_tensor
+     OUTPUTS for forward: word level embedding
 
 """
 
@@ -19,19 +23,21 @@ Embedding(it is a super class that creates objects of other embedding classes):
 
 
 class Embedding_layer(nn.Module):
-    def __init__(self,use_char_emb, use_word_emb,char_embed_type, is_train, keep_prob, kernel_dim , kernel_size, embedding_dim,vocab_size,
-                 padding_idx=None, word_embedding_size = 300, fine_tune=False):
+    def __init__(self, config): #use_char_emb, use_word_emb,char_embed_type, is_train, keep_prob, kernel_dim , kernel_size, embedding_dim,vocab_size,
+                 #padding_idx=None, word_embedding_size = 300, fine_tune=False):
         super(Embedding,self).__init__()
 
-        self.use_char_emb = use_char_emb
-        self.use_word_emb = use_word_emb
-        self.char_embed_type = char_embed_type
-        self.char_tensor = char_tensor
-        self.word_tensor = word_tensor
+        # self.use_char_emb = config.use_char_emb
+        #self.use_char_emb = use_char_emb
+        #self.use_word_emb = use_word_emb
+        #self.char_embed_type = char_embed_type
+        #self.char_tensor = char_tensor
+        #self.word_tensor = word_tensor
+        self.config = config
 
 
         if(self.use_char_emb == True && self.use_word_emb == True):
-            self.initial_word_embedding = pickle.load(open(os.path.join(self.emb_dir, "word_embeddings" + str(config.word_emb_size) + ".pkl")))
+            self.initial_word_embedding = pickle.load(open(os.path.join(emb_dir, "word_embeddings" + str(config.word_emb_size) + ".pkl")))
             self.initial_char_embedding = pickle.load(open(os.path.join(self.emb_dir, "char_embeddings" + str(config.char_emb_size) +  ".pkl")))
             self.char_embedding_cnn = CharLevelEmbeddingCNN(is_train, keep_prob, kernel_dim , kernel_size, embedding_dim,initial_char_embedding)
             self.word_level_embedding = WordLevelEmbedding(vocab_size, word_embedding_size , initial_word_embedding,padding_idx, fine_tune)
@@ -53,14 +59,14 @@ class Embedding_layer(nn.Module):
 
         elif(self.use_char_emb == False && self.use_word_emb == True):
             word_embedding = self.word_level_embedding(word_tensor)
-            return word_embedding
+            return None, word_embedding
 
         elif(self.use_char_emb == True && self.use_word_emb == False):
             char_embedding = self.char_embedding_cnn(char_tensor)
-            return char_embedding
+            return char_embedding, None
 
 
-class CharLevelEmbeddingCNN(nn.Module):
+class _CharLevelEmbeddingCNN(nn.Module):
 
     def __init__(self, is_train, keep_prob, kernel_dim , kernel_size, embedding_dim,initial_char_embedding):
         super(CharLevelEmbeddingCNN, self).__init__()
@@ -77,7 +83,7 @@ class CharLevelEmbeddingCNN(nn.Module):
         # char_embeds = self.char_embeddings(char_tensor)
         return encoded_content_char_after_cnn
 
-class WordLevelEmbedding(nn.Module):
+class _WordLevelEmbedding(nn.Module):
 
     def __init__(self, vocab_size, word_embedding_size = 300, initial_word_embedding = None,
                  padding_idx = None, fine_tune=False):
