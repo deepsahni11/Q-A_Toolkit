@@ -43,17 +43,6 @@ class BiDAF(nn.Module):
 
 
 
-        #self.encoding_layer_type = config.encoding_layer_type
-        #self.bilinear_compute    = config.bilinear_compute_type
-        #self.encoding_combination_layer = config.encoding_combination_layer_type
-        #self.query_aware_document_representation = config.query_aware_document_representation_type
-        #self.document_aware_query_representation_type = config.document_aware_query_representation_type
-
-        #self.self_match_representation_type =  config.self_match_representation_type
-
-        #self.predict_start_type = config.predict_start_type
-        #self.mid_processingoutputlayer_type = config.mid_processingoutputlayer_type
-        #self.predict_end_type = config.predict_end_type
 
         self.char_embed_type = config.char_embed_type
 
@@ -89,7 +78,7 @@ class BiDAF(nn.Module):
 
         initial_word_embedding = word_embedding_tensor
         self.embedding_layer = embedding.Embedding_layer(use_char_emb, use_word_emb,char_embed_type, is_train, keep_prob, kernel_dim , kernel_size, embedding_dim,vocab_size,
-                     padding_idx=None, word_embedding_size = 300, initial_word_embedding = None, fine_tune=False)
+                     padding_idx, word_embedding_size, initial_word_embedding , fine_tune)
 
 
 
