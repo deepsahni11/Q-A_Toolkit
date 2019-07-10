@@ -19,8 +19,8 @@ Embedding_Combination_Layer:
 2) forward function:
    INPUTS: word_embeddings,character_embeddings (ie. output of Embedding_Layer_1)
    character_embeddings : ( N x W x Dim1) where N is batch size, W : sequence length
-   word_embeddings:  ( N x W x Dim2) where N is batch size, m : sequence length 
-   OUTPUT: combined tensor of word_embeddings and character_embeddings : ( N x W x Dim1+Dim2) where N is batch size, m : sequence length 
+   word_embeddings:  ( N x m x Dim2) where N is batch size, m : sequence length 
+   OUTPUT: combined tensor of word_embeddings and character_embeddings
 
 """
 
@@ -33,27 +33,14 @@ class Embedding_Combination_Layer(nn.Module):
 
     def forward(self,word_embeddings, char_embeddings):
 
-        if(self.config.combination_type == "highway"):
-            embedding_combination = self.highway_combination(word_embeddings, char_embeddings)
-        elif(self.config.combination_type == "concatenation"):
-            embedding_combination = self.concatEmbeddings(word_embeddings, char_embeddings)
+        embedding_combination = self.highway_combination(word_embeddings, char_embeddings)
         return embedding_combination
 
-class concatEmbeddings(nn.Module):
 
-    def __init__(self):
-
-        super(concatEmbeddings, self).__init__()
-
-    def forward(word_embeddings, char_embeddings):
-
-        concatenated_embeddings = torch.concat([word_embeddings, char_embeddings], dim=2)
-        return concatenated_embeddings
-   
 class _HighwayCombination(nn.Module):
 
     def __init__(self, config):
-        super(HighwayCombination, self).__init__()
+        super(_HighwayCombination, self).__init__()
 
         self.highwaynet = HighwayNet(config.depth,config.size)
 

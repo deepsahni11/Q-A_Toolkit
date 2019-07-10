@@ -37,16 +37,16 @@ class Embedding_layer(nn.Module):
         if(self.use_char_emb == True && self.use_word_emb == True):
             self.initial_word_embedding = pickle.load(open(os.path.join(emb_dir, "word_embeddings" + str(config.word_emb_size) + ".pkl")))
             self.initial_char_embedding = pickle.load(open(os.path.join(self.emb_dir, "char_embeddings" + str(config.char_emb_size) +  ".pkl")))
-            self.char_embedding_cnn = CharLevelEmbeddingCNN(self.config,initial_char_embedding)
-            self.word_level_embedding = WordLevelEmbedding(self.config,initial_word_embedding)
+            self.char_embedding_cnn = _CharLevelEmbeddingCNN(self.config,initial_char_embedding)
+            self.word_level_embedding = _WordLevelEmbedding(self.config,initial_word_embedding)
 
         elif(self.use_char_emb == False && self.use_word_emb == True):
             self.initial_word_embedding = pickle.load(open(os.path.join(self.emb_dir, "word_embeddings" + str(config.word_emb_size) + ".pkl")))
-            self.word_level_embedding = WordLevelEmbedding(self.config,initial_word_embedding)
+            self.word_level_embedding = _WordLevelEmbedding(self.config,initial_word_embedding)
 
         elif(self.use_char_emb == True && self.use_word_emb == False):
             self.initial_char_embedding = pickle.load(open(os.path.join(self.emb_dir, "char_embeddings" + str(config.char_emb_size) +  ".pkl")))
-            self.char_embedding_cnn = CharLevelEmbeddingCNN(self.config,initial_char_embedding)
+            self.char_embedding_cnn = _CharLevelEmbeddingCNN(self.config,initial_char_embedding)
 
     def forward(self,char_tensor,word_tensor):
 
