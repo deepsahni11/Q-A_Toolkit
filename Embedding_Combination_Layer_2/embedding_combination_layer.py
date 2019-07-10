@@ -33,11 +33,24 @@ class Embedding_Combination_Layer(nn.Module):
 
     def forward(self,word_embeddings, char_embeddings):
 
-        embedding_combination = self.highway_combination(word_embeddings, char_embeddings)
+        if(self.config.combination_type == "highway"):
+            embedding_combination = self.highway_combination(word_embeddings, char_embeddings)
+        elif(self.config.combination_type == "concatenation"):
+            embedding_combination = self.concatEmbeddings(word_embeddings, char_embeddings)
         return embedding_combination
 
+class concatEmbeddings(nn.Module):
 
-class HighwayCombination(nn.Module):
+    def __init__(self):
+
+        super(concatEmbeddings, self).__init__()
+
+    def forward(word_embeddings, char_embeddings):
+
+        concatenated_embeddings = torch.concat([word_embeddings, char_embeddings], dim=2)
+        return concatenated_embeddings
+   
+class _HighwayCombination(nn.Module):
 
     def __init__(self, config):
         super(HighwayCombination, self).__init__()
