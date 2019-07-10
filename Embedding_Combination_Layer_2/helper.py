@@ -1,17 +1,3 @@
-import torch
-import torch.optim as optim
-import torch.nn as nn
-import torch.nn.functional as F
-import numpy as np
-import logging
-
-from numpy import genfromtxt
-from torch.autograd import Variable
-from torch.nn import Embedding
-from torch import zeros, from_numpy, Tensor, LongTensor, FloatTensor
-from argparse import ArgumentParser
-
-
 
 class HighwayLayer(nn.Module):
     # TODO: We may need to add weight decay here
@@ -39,20 +25,6 @@ class HighwayNet(nn.Module):
 
     def forward(self, x):
         return self.main_(x)
-
-
-
-class HighwayCombination(nn.Module):
-
-    def __init__(self, depth, size):
-        super(HighwayCombination, self).__init__()
-
-        self.highwaynet = HighwayNet(depth, size)
-
-    def forward(self, word_embeddings, char_embeddings):
-        x = torch.cat((word_embeddings, char_embeddings), dim=2)
-        return self.highwaynet(x)
-
 
 class concatEmbeddings(nn.Module):
 
