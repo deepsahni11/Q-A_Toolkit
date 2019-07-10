@@ -19,8 +19,8 @@ Embedding_Combination_Layer:
 2) forward function:
    INPUTS: word_embeddings,character_embeddings (ie. output of Embedding_Layer_1)
    character_embeddings : ( N x W x Dim1) where N is batch size, W : sequence length
-   word_embeddings:  ( N x m x Dim2) where N is batch size, m : sequence length 
-   OUTPUT: combined tensor of word_embeddings and character_embeddings
+   word_embeddings:  ( N x W x Dim2) where N is batch size, m : sequence length 
+   OUTPUT: combined tensor of word_embeddings and character_embeddings : ( N x W x Dim1+Dim2) where N is batch size, m : sequence length 
 
 """
 
