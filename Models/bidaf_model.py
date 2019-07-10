@@ -8,7 +8,7 @@ import code
 import _pickle as pickle
 import os
 from torch import autograd
-import Embedding_Layer(1).embedding as embedding
+import Embedding_Layer_1.embedding as embedding
 import Encoding_Layer_3.encoding_layer as encoding_layer
 import Cross_Interaction_Layer_4.bilinear_compute as bilinear_compute
 import Embedding_Combination_Layer(2).encoding_combination_layer as encoding_combination_layer
@@ -32,7 +32,7 @@ ldtype = torch.cuda.LongTensor
 
 PADDING = 'VALID'
 torch.cuda.manual_seed_all(4)
-torch.manual_seed(4) 
+torch.manual_seed(4)
 
 class BiDAF(nn.Module):
     def __init__(self, config):
@@ -48,7 +48,7 @@ class BiDAF(nn.Module):
         #self.encoding_combination_layer = config.encoding_combination_layer_type
         #self.query_aware_document_representation = config.query_aware_document_representation_type
         #self.document_aware_query_representation_type = config.document_aware_query_representation_type
-        
+
         #self.self_match_representation_type =  config.self_match_representation_type
 
         #self.predict_start_type = config.predict_start_type
@@ -79,49 +79,63 @@ class BiDAF(nn.Module):
         self.dictionaries = pickle.load(open(os.path.join(self.emb_dir, "dictionaries.pkl")))
 
         self.word_vocab_size     = len(self.dictionaries["word"])
-        self.dropout = 0 #config.dropout
+        self.dropout = config.dropout
         self.rnn_bidirectional = config.rnn_bidirectional
 
-        padding_idx = 0
+        self.padding_idx = config.padding_idx
+
         word_embedding_tensor = pickle.load(open(os.path.join(self.emb_dir, "word_embeddings" + str(config.word_emb_size) + ".pkl")))
+        char_embedding_tensor = pickle.load(open(os.path.join(self.emb_dir, "char_embeddings" + str(config.char_emb_size) +  ".pkl")))
+
+        initial_word_embedding = word_embedding_tensor
+        self.embedding_layer = embedding.Embedding_layer(use_char_emb, use_word_emb,char_embed_type, is_train, keep_prob, kernel_dim , kernel_size, embedding_dim,vocab_size,
+                     padding_idx=None, word_embedding_size = 300, initial_word_embedding = None, fine_tune=False)
+
+
+
+
+
+        # word_embedding_tensor = pickle.load(open(os.path.join(self.emb_dir, "word_embeddings" + str(config.word_emb_size) + ".pkl")))
+
+
         self.word_embed_mat = nn.Embedding(self.word_vocab_size, embedding_dim=config.word_emb_size, padding_idx=padding_idx)
         self.word_embed_mat.weight.data.copy_(torch.FloatTensor(word_embedding_tensor))
-	self.word_embed_mat.weight.requires_grad = config.finetune
+	    self.word_embed_mat.weight.requires_grad = config.finetune
         #self.word_embed_mat.cpu()
 
-        char_embedding_tensor = pickle.load(open(os.path.join(self.emb_dir, "char_embeddings" + str(config.char_emb_size) +  ".pkl")))
+        # char_embedding_tensor = pickle.load(open(os.path.join(self.emb_dir, "char_embeddings" + str(config.char_emb_size) +  ".pkl")))
         self.char_embed_mat = nn.Embedding(self.char_vocab_size, embedding_dim=config.char_emb_size, padding_idx = padding_idx)
-	self.char_embed_mat.weight.data.copy_(torch.FloatTensor(char_embedding_tensor))
-        #self.word_embed = embedding.WordLevelEmbedding(self.word_vocab_size, config.word_emb_size,
+	    self.char_embed_mat.weight.data.copy_(torch.FloatTensor(char_embedding_tensor))
+        # self.word_embed = embedding.WordLevelEmbedding(self.word_vocab_size, config.word_emb_size,
         #                                               initial_word_embedding=self.dictionaries["word"])
-        if (self.char_embed_type == 'RNN'):
-            self.char_embed = embedding.CharLevelEmbeddingRNN(config.char_vocab_size,
-                                           config.char_emb_size)
+        # if (self.char_embed_type == 'RNN'):
+        #     self.char_embed = embedding.CharLevelEmbeddingRNN(config.char_vocab_size,
+        #                                    config.char_emb_size)
 
-        elif (self.char_embed_type == "CNN"):
+        # elif (self.char_embed_type == "CNN"):
             # char-level convs
-            filter_sizes = list(map(int, config.out_channel_dims.split(',')))
-            heights = list(map(int, config.filter_heights.split(',')))
-            self.filter_sizes = filter_sizes
-            self.heights = heights
-            self.char_embed = embedding.CharLevelEmbeddingCNN(config.is_train, config.keep_prob,  kernel_dim=filter_sizes[0], kernel_size=heights, embedding_dim=config.char_emb_size)
-            #self.char_embedding_query = embedding.CharLevelEmbeddingCNN(config.is_train, config.keep_prob)
-            self.emb_size = self.config.word_emb_size + self.config.char_emb_out_size 
+        filter_sizes = list(map(int, config.out_channel_dims.split(',')))
+        heights = list(map(int, config.filter_heights.split(',')))
+        self.filter_sizes = filter_sizes
+        self.heights = heights
+        self.char_embed = embedding.CharLevelEmbeddingCNN(config.is_train, config.keep_prob,  kernel_dim=filter_sizes[0], kernel_size=heights, embedding_dim=config.char_emb_size)
+        #self.char_embedding_query = embedding.CharLevelEmbeddingCNN(config.is_train, config.keep_prob)
+        self.emb_size = self.config.word_emb_size + self.config.char_emb_out_size
 
         self.encoding_comb_layer = encoding_combination_layer.HighwayCombination(2, self.emb_size)
-        self.encoding_layer = encoding_layer.EncodingLayerRNN(input_size = self.emb_size, 
-                                                              hidden_size = self.hidden_size, 
+        self.encoding_layer = encoding_layer.EncodingLayerRNN(input_size = self.emb_size,
+                                                              hidden_size = self.hidden_size,
                                                               num_layers = self.num_layers,
-                                                              bidirectional=self.rnn_bidirectional, 
+                                                              bidirectional=self.rnn_bidirectional,
                                                               dropout = self.dropout)
 
         self.bilinear_matrix = bilinear_compute.bidaf_bilinear(passage_vec_size = self.hidden_size,
                                                                  query_vec_size = self.hidden_size)
 
-        
+
         self.document_aware_query_representation = document_aware_query_representation.documentAwareQuery(config.documentAwareQuery_method)
         self.query_aware_document_representation  = query_aware_document_representation.queryAwareDocument(config.queryAwareDocument_method)
-        
+
         self.self_match = self_match.bidaf_selfmatch(input_size = self.hidden_size, num_layers=self.num_layers, bidirectional=self.rnn_bidirectional,
                                                      dropout=self.dropout, hidden_size=self.hidden_size)
 
@@ -134,6 +148,16 @@ class BiDAF(nn.Module):
 
     def forward(self, content_batches, query_batches):
 
+        # if(self.use_char_emb == True && self.use_word_emb == True):
+        #     pass
+        # elif(self.use_char_emb == False && self.use_word_emb == True):
+        #     pass
+        #
+        # elif(self.use_char_emb == True && self.use_word_emb == False):
+        #     pass
+
+
+
         temp_batches = content_batches
         """
         for i,v in content_batches.iteritems():
@@ -142,7 +166,7 @@ class BiDAF(nn.Module):
         content_batches = temp_batches
         temp_batches1 = query_batches
         for i,v in query_batches.iteritems():
-            temp_batches1[i] = Variable(torch.cuda.LongTensor(v)) 
+            temp_batches1[i] = Variable(torch.cuda.LongTensor(v))
             temp_batches1[i].requires_grad = False
         query_batches = temp_batches1
         """
@@ -168,7 +192,7 @@ class BiDAF(nn.Module):
             encoded_query_char   = self.char_embed(encoded_query_char)
 
         #print (encoded_content_char.size(), encoded_query_char.size(), encoded_content.size(), encoded_query.size())
-        if (self.use_char_emb):
+        # if (self.use_char_emb):
 
             passage_combine_embeddings = self.encoding_comb_layer(encoded_content, encoded_content_char)
             query_combine_embeddings   = self.encoding_comb_layer(encoded_query, encoded_query_char)

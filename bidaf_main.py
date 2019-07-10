@@ -8,8 +8,8 @@ import train_model
 import Models.bidaf_model as bidaf_model
 class Config(object):
     pass
-	
-if __name__ == '__main__':	
+
+if __name__ == '__main__':
 
 	config.max_num_sent=1
     config.max_num_sent_words=740
@@ -37,7 +37,7 @@ if __name__ == '__main__':
     config.run_id="0"
     config.outdir=".D:/Downloads/SQuAD/"
     config.emb_dir="D:/Downloads/SQuAD/"
-    
+
 
     # Device placement config.device", type=str, default="/cpu:0", help="default device for summing gradients. [/cpu:0]")
     config.device_type="gpu"
@@ -92,7 +92,7 @@ if __name__ == '__main__':
     config.log_period=100
     config.eval_period=1000
     config.save_period=1000
-    config.max_to_keep=20 
+    config.max_to_keep=20
     config.dump_eval=True
     config.dump_answer=True
     config.vis=False
@@ -121,15 +121,15 @@ if __name__ == '__main__':
 
     # Ablation options
     config.use_char_emb=True
-
+    config.padding_idx = 0
     config.use_word_emb=True
     config.q2c_att=True
     config.c2q_att=True
     config.dynamic_att=False
 	model = bidaf_model.BiDAF(config)
-    
+
 	model().cpu()
-	 
+
     train_model = train_model.TrainModel(config, model)
 
     train_model.run_training()
