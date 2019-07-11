@@ -14,7 +14,7 @@ torch.manual_seed(4)
 np.random.seed(4)
 
 """
-Self-Interaction:
+DCN:
 1) init function: creates onject of class Fusion_BiLSTM
    INPUTS: config
 2) forward function:
@@ -23,18 +23,18 @@ Self-Interaction:
    INPUTS: A_Q_matrix,A_D_matrix,A_Q_vector,A_D_vector (OUTPUTS to Co-Attention Layer)
            A_Q_matrix : B x (m + 1) x (n + 1): representation of each question using max words of document
            A_D_matrix : B x (n + 1) x (m + 1):: representation of each documnet using max words of question
-           A_Q_vector : B  x (n + 1) x 1:
-           A_D_vector : B  x (m + 1) x 1
+           A_Q_vector : B  x 1 x (n + 1):
+           A_D_vector : B  x 1 x (m + 1)
 
            question_representation(Q: B x (n + 1) x l ), context_representation(D: B x (m + 1) x l)( OUTPUTS to EncodingLayer)
            document_word_sequence_mask
    OUTPUTS: U (final document representation after passing though bi-lstm)
 """
 
-class Self_Interaction(nn.Module):
+class DCN(nn.Module):
 
     def __init__(self,config):
-        super(Self_Interaction, self).__init__()
+        super(DCN, self).__init__()
 
         self.config = config
         self.fusion_bilstm = Fusion_BiLSTM(self.config.hidden_dim, self.config.dropout_ratio)

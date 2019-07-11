@@ -12,7 +12,7 @@ torch.manual_seed(4)
 np.random.seed(4)
 
 """
-DCN_Coattention_Encoder:
+Cross_interaction:
 1) init function:
    INPUTS: Config
 2) forward function:
@@ -22,13 +22,13 @@ DCN_Coattention_Encoder:
    OUTPUTS:
    A_Q_matrix : B x (m + 1) x (n + 1): representation of each question using max words of document
    A_D_matrix : B x (n + 1) x (m + 1):: representation of each documnet using max words of question
-   A_Q_vector : B  x (n + 1) x 1:
-   A_D_vector : B  x (m + 1) x 1
+   A_Q_vector : B  x 1 x (n + 1):
+   A_D_vector : B  x 1 x (m + 1)
 
 """
 
 
-class DCN_Coattention_Encoder(nn.Module):
+class Cross_interaction(nn.Module):
     def __init__(self,config):
     #hidden_dim, maxout_pool_size, embedding_matrix, max_number_of_iterations, dropout_ratio):
         super(DCN_Coattention_Encoder, self).__init__()
@@ -63,7 +63,7 @@ class DCN_Coattention_Encoder(nn.Module):
         A_Q_matrix = F.softmax(L, dim=2) # B x (m + 1) x (n + 1)
         A_D_matrix = F.softmax(L_tranpose, dim=2)  # B x (n + 1) x (m + 1)
 
-        A_Q_vector = torch.sum(A_Q_matrix,dim=1).permute(0,2,1) # B  x (n + 1) x 1
-        A_D_vector = torch.sum(A_D_matrix,dim=1).permute(0,2,1) # B  x (m + 1) x 1
+        A_Q_vector = torch.mean(A_Q_matrix,1)# B  x 1 x (n + 1)
+        A_D_vector = torch.mean(A_D_matrix,1) # B  x 1 x (m + 1) 
 
         return A_Q_matrix,A_D_matrix,A_Q_vector,A_D_vector
