@@ -14,7 +14,7 @@ torch.manual_seed(4)
 np.random.seed(4)
 
 """
-DCN:
+DCN_self_interaction:
 1) init function: creates onject of class Fusion_BiLSTM
    INPUTS: config
 2) forward function:
@@ -31,10 +31,32 @@ DCN:
    OUTPUTS: U (final document representation after passing though bi-lstm)
 """
 
-class DCN(nn.Module):
+
+class Bidaf_self_interaction(nn.Module):
 
     def __init__(self,config):
-        super(DCN, self).__init__()
+    super(Bidaf_self_interaction, self).__init__()
+
+    self.config = config
+    self.self_match = bidaf_self_match(self.config.input_size, self.config.hidden_size, num_layers=1, bidirectional=True, dropout=0, batch_first=True)
+
+    self.document_aware_query = documentAwareQuery(self.config.daq_rep)
+    self.query_aware_document = queryAwareDocument(self.config.qad_rep)
+
+    def forward(self,passage_representation, question_represenation, b_attention_query_vector,S_attention_document):
+        document_aware_query_rep_matrix = self.document_aware_query(passage_representation, question_represenation, b_attention_query_vector)
+        query_aware_document_rep_vector = self.query_aware_document(passage_representation, question_represenation, S_attention_document)
+# passage_vectors, query_vectors, query_aware_passage_rep ,query_aware_passage_mat, passage_aware_query_rep, passage_aware_query_mat
+        self_match_representation = self.self_match(passage_representation,question_represenation,query_aware_document_rep_vector,None,None,document_aware_query_rep_matrix)
+
+        retrun self_match_representation
+
+
+
+class DCN_self_interaction(nn.Module):
+
+    def __init__(self,config):
+        super(DCN_self_interaction, self).__init__()
 
         self.config = config
         self.fusion_bilstm = Fusion_BiLSTM(self.config.hidden_dim, self.config.dropout_ratio)
@@ -51,6 +73,8 @@ class DCN(nn.Module):
         A_D = A_D_matrix
 
         D_transpose = torch.transpose(D, 1, 2) #dimension: B x l x (m + 1)
+
+        # C_Q = query aware document representation
         C_Q = torch.bmm(D_transpose, A_Q) # (B x l x (m + 1)) x (B x (m + 1) x (n + 1)) => B x l x (n + 1)
 
         L = torch.bmm(D, Q_transpose)
@@ -59,6 +83,7 @@ class DCN(nn.Module):
 
 
         # concatenation along dimension=1:(B x l x (n + 1) ; B x l x (n + 1)  -----> B x 2l x (n + 1) ) x (B x (n + 1) x (m + 1)) ====> B x 2l x (m + 1)
+        # C_D = document aware query representation
         C_D = torch.bmm(torch.cat((Q_transpose, C_Q), 1), A_D) # B x 2l x (m + 1)
         C_D_transpose = torch.transpose(C_D, 1, 2)  # B x (m + 1) x 2l
 
