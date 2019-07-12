@@ -24,8 +24,20 @@ Dynamic_Decoder:
    OUTPUTS: loss, index_start, index_end
 """
 
+class BIDAF_answer_prediction(nn.Module):
+    def __init__(self,config):
+        self.config = config
+        self.answer_start_logits = predict_start_bidaf(config)
+        self.mid_processing_layer = mid_processing_unit(config)
+        self.answer_end_logits = predict_end_bidaf(config)
+    def forward(self,self_match_representation):
+        start_logits = self.answer_start_logits(self_match_representation[0], self_match_representation[1])
+        mid_processing = self.mid_processing_layer(self_match_representation[1])
+        end_logits = self.answer_end_logits(self_match_representation[0], mid_processing)
+        return start_logits, end_logits
 
-class Dynamic_Decoder(nn.Module):
+        
+class DCN_Dynamic_Decoder(nn.Module):
     def __init__(self, config):
         super(Dynamic_Decoder, self).__init__()
         self.config = config

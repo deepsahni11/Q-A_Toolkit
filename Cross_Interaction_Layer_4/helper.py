@@ -10,6 +10,8 @@ import numpy as np
 torch.manual_seed(4)
 np.random.seed(4)
 
+
+
 def softmax(input, axis=1, f=None):
     input_size = input.size()
 
@@ -57,7 +59,7 @@ class bidaf_bilinear(nn.Module): # similarity matrix for BiDAF paper
 
         return dot_product
 
-class Cosine_Similarity(nn.Module): # similarity matrix for BiDAF paper
+class Cosine_Similarity(nn.Module): # similarity matrix for DCN paper
     def __init__(self,config):
 
         self.config = config
@@ -66,12 +68,16 @@ class Cosine_Similarity(nn.Module): # similarity matrix for BiDAF paper
     def forward(self,question_representation,document_representation):
         Q = question_representation
         D = document_representation
-        Q_non_linearity = torch.tanh(self.question_proj(Q.view(-1, self.config.hidden_dim))).view(Q.size()) #B x (n + 1) x l
+
+        if(self.config.query_non_linearity == True):
+
+            Q_non_linearity = torch.tanh(self.question_proj(Q.view(-1, self.config.hidden_dim))).view(Q.size()) #B x (n) x l
+            Q = Q_non_linearity
         # transpose(tensor, first_dimension to be transposed, second_dimension to be transposed)
-        Q_transpose = torch.transpose(Q_non_linearity, 1, 2) #dimension: B x l x (n + 1)
+        Q_transpose = torch.transpose(Q, 1, 2) #dimension: B x l x (n)
 
         # Performs a batch matrix-matrix product of matrices stored in batch1 and batch2.
         # batch1 and batch2 must be 3-D tensors each containing the same number of matrices.
-        Cosine_similarity_matrix = torch.bmm(D, Q_transpose) # dimension of L : B x (m + 1) x (n + 1)
+        Cosine_similarity_matrix = torch.bmm(D, Q_transpose) # dimension of L : B x (m) x (n)
 
         return Cosine_similarity_matrix

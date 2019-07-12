@@ -20,10 +20,12 @@ class Encoding_Layer(nn.Module):
 
         if(config.encoder_type = "bi-lstm"):
             self.encoder = nn.LSTM(input_size = self.config.input_size,hidden_size = self.config.hidden_size,num_layers = self.config.num_layers,bidirectional = True,dropout = self.config.dropout,batch_first = True)
-        if(config.encoder_type = "lstm"):
+        elif(config.encoder_type = "lstm"):
             self.encoder = nn.LSTM(input_size = self.config.input_size,hidden_size = self.config.hidden_size,num_layers = self.config.num_layers,bidirectional = False,dropout = self.config.dropout,batch_first = True)
+        elif(config.encoder_type = "bi-gru"):
+            self.encoder = nn.GRU(input_size = self.config.input_size,hidden_size = self.config.hidden_size,num_layers = self.config.num_layers,bidirectional = True,dropout = self.config.dropout,batch_first = True)
         elif(config.encoder_type = "gru"):
-            self.encoder = nn.GRU(input_size = self.config.input_size,hidden_size = self.config.hidden_size,num_layers = self.config.num_layers,bidirectional = self.config.bidirectional,dropout = self.config.dropout,batch_first = True)
+            self.encoder = nn.GRU(input_size = self.config.input_size,hidden_size = self.config.hidden_size,num_layers = self.config.num_layers,bidirectional = False,dropout = self.config.dropout,batch_first = True)
 
         # self.passage_encoder = nn.LSTM(input_size = self.config.input_size,hidden_size = self.config.hidden_size, num_layers = self.config.num_layers,bidirectional = self.config.bidirectional,dropout = self.config.dropout, batch_first = True)
 

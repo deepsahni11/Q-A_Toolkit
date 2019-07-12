@@ -11,7 +11,101 @@ import numpy as np
 torch.manual_seed(4)
 np.random.seed(4)
 
+class predict_start_bidaf(nn.Module):
 
+    def __init__(self, config):
+
+        self.config = config
+        input_size = self.config.hidden_dim
+        super(predict_start_bidaf, self).__init__()
+        self.w = torch.autograd.Variable(torch.Tensor(10*input_size, 1).type(torch.cuda.FloatTensor))
+        init.xavier_normal(self.w)
+
+    def forward(self, *args):
+
+        list_of_rep = []
+
+        for arg in args:
+            list_of_rep.append(arg)
+
+        x = list_of_rep
+        concat_rep = torch.cat((x[0],x[1]), len(x[0].size()) -1 )
+
+        temp = torch.squeeze(self.w)
+        temp = torch.unsqueeze(temp, dim=0)
+        temp = torch.unsqueeze(temp, dim=0)
+        #temp = temp.repeat(x[0].size()[0], x[0].size()[1], 1)
+
+        res = temp * concat_rep
+        res = torch.sum(res, dim=-1)
+        logits = res
+        return logits
+
+class mid_processing_unit(nn.Module):
+
+    def __init__(self, config):
+
+        super(mid_processing_unit, self).__init__()
+        # input_size, bidirectional, dropout, mid_processing
+        self.config = config
+        # self.mid_processing = self.config.mid_processing
+        self.init_variables(self.config.input_size, self.config.bidirectional, self.config.dropout, self.config.mid_processing)
+
+
+    def init_variables(self, input_size, bidirectional, dropout, mid_processing='bidaf'):
+        if mid_processing == 'bidaf':
+            self.encode_layer = torch.nn.GRU(2*input_size, hidden_size = input_size, num_layers=1,
+                                    bidirectional=bidirectional,
+                                    dropout=dropout,
+                                    batch_first = True)
+            self.hidden_size = input_size
+
+    def forward(self, *args):
+
+        list_of_rep = []
+
+        for arg in args:
+            list_of_rep.append(arg)
+
+
+
+        concat_rep = torch.cat(list_of_rep, dim=len(list_of_rep[0].size()) - 1)
+
+        batch_size = concat_rep.size()[0]
+        h_p = torch.autograd.Variable(torch.zeros(2, batch_size, self.hidden_size).type(torch.cuda.FloatTensor), requires_grad=False)
+
+        encoded_objs, _ = self.encode_layer(concat_rep, h_p)
+        del h_p, batch_size
+
+        return encoded_objs
+class predict_end_bidaf(nn.Module):
+
+    def __init__(self, config):
+
+        super(predict_end_bidaf, self).__init__()
+        self.config = config
+        input_size = self.config.hidden_size
+        self.w = torch.autograd.Variable(torch.Tensor(10*input_size, 1))
+        init.xavier_normal(self.w)
+
+    def forward(self, *args):
+
+        list_of_rep = []
+
+        for arg in args:
+            list_of_rep.append(arg)
+
+        concat_rep = torch.cat(list_of_rep, dim=-1)
+
+        temp = torch.squeeze(self.w)
+        temp = torch.unsqueeze(temp, dim=0)
+        temp = torch.unsqueeze(temp, dim=0)
+        temp = temp.repeat(concat_rep.size()[0], concat_rep.size()[1], 1)
+
+        res = temp * concat_rep
+        res = torch.sum(res, dim=-1)
+        logits = res
+        return logits
 class Highway_Maxout_Network(nn.Module):
     def __init__(self, hidden_dim, maxout_pool_size, dropout_ratio):
         super(Highway_Maxout_Network, self).__init__()

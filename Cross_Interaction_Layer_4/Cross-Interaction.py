@@ -14,7 +14,7 @@ torch.manual_seed(4)
 np.random.seed(4)
 
 """
-Cross_interaction:
+DCN_cross_interaction:
 1) init function:
    INPUTS: Config
 2) forward function:
@@ -23,11 +23,29 @@ Cross_interaction:
            n = max length of instances in one batch of question
    OUTPUTS:
    A_Q_matrix : B x (m + 1) x (n + 1): representation of each question using max words of document
-   A_D_matrix : B x (n + 1) x (m + 1):: representation of each documnet using max words of question
+   A_D_matrix : B x (n + 1) x (m + 1): representation of each documnet using max words of question
    A_Q_vector : B  x 1 x (n + 1):
    A_D_vector : B  x 1 x (m + 1)
 
 """
+
+class Gated_attention_cross_interaction(nn.Module):
+    def __init__(self,config):
+        self.config = config
+        self.similarity_matrix = Cosine_Similarity(config)
+        self.softmax = torch.nn.Softmax()
+
+    def forward(self,question_representation,document_representation):
+        Q = question_representation # B x n x 2l
+        D = document_representation # B x m x 2l
+        # S = similarity matrix of Gated_attention_reader paper(cosine similarity)
+        S = self.similarity_matrix(Q,D) # B x m x n
+        S_softmax = self.softmax(S,dim = 2) # B x m x n
+
+        q_matrix = torch.bmm(S_softmax, Q) # B x n x 2l
+        x_matrix = q_matrix + D  # B x m x 2l
+
+        return x_matrix
 class Bidaf_cross_interaction(nn.Module):
     def __init__(self,config):
         super(Bidaf_cross_interaction, self).__init__()
