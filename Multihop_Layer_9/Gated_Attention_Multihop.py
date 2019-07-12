@@ -15,7 +15,7 @@ from Cross_Interaction_Layer_4.embedding_combination_layer import *
 torch.manual_seed(4)
 np.random.seed(4)
 
-class Gated_attention_multihop(nn.Module):
+class Gated_attention_multihop_cross_interaction(nn.Module): # cross interaction combined with multihop over layers
     def __init__(self,config):
         self.config = config
         self.bi_rnn = Bi_RNN(self.config)

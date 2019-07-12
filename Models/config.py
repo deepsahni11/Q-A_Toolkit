@@ -5,17 +5,23 @@ class Config(object):
 
 config = Config()
 # E:\Internships_19\Internship(Summer_19)\Q&A_Toolkit\Dynamic_Coattention_Networks\Models\saved_models
-config.data_dir = "Dataset_analysis/SQuAD/"
-config.model_dir = "Dynamic_Coattention_Networks/Models/saved_models/"
+config.data_dir = "E:\\Internships_19\\Internship(Summer_19)\\Q&A_Toolkit\\Dataset_analysis\\SQuAD\\"
+config.model_dir = "E:\\Internships_19\\Internship(Summer_19)\\Q&A_Toolkit\\Dynamic_Coattention_Networks\\Models\\saved_models\\"
 config.word_embedding_size = 100
 config.hidden_dim = 100
 # config.dropout_ratio = 0.15
+config.encoder_type = "lstm"
+config.cross_interaction_type = "dcn"
+config.self_interaction_type = "dcn"
+config.decoder_type = "dcn"
+config.num_layers = 1
 config.max_context_length = 600
 config.max_question_length = 30
 config.word_embedding_size = 100
 config.char_embedding_size = 20
 config.max_words=700
 config.lr = 0.001
+config.dropout = 0.15
 config.dropout_ratio = 0.15
 config.early_stop = 10
 config.vocab_size = 50000

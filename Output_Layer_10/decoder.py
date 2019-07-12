@@ -8,7 +8,7 @@ from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 import pickle
 import os
 import numpy as np
-from helper import *
+from Output_Layer_10.helper import *
 torch.manual_seed(4)
 np.random.seed(4)
 
@@ -23,23 +23,51 @@ Dynamic_Decoder:
             span_tensor: B x 2
    OUTPUTS: loss, index_start, index_end
 """
-
-class BIDAF_answer_prediction(nn.Module):
+class Decoder(nn.Module):
     def __init__(self,config):
+        super(Decoder, self).__init__()
         self.config = config
+
+        if(self.config.decoder_type == "bidaf"):
+            self.decoder = BIDAF_decoder(self.config)
+        elif(self.config.decoder_type == "dcn"):
+            self.decoder = DCN_Dynamic_Decoder(self.config)
+
+    def forward(self,output_to_self_interaction,document_word_sequence_mask,span_tensor):
+        if(self.config.decoder == "bidaf"):
+            loss,index_start,index_end = self.decoder(output_to_self_interaction,span_tensor)
+        elif(self.config.decoder == "dcn"):
+            loss,index_start,index_end = self.decoder(output_to_self_interaction,document_word_sequence_mask,span_tensor)
+
+class BIDAF_decoder(nn.Module):
+    def __init__(self,config):
+        super(BIDAF_decoder, self).__init__()
+        self.config = config
+        self.loss_function = torch.nn.CrossEntropyLoss()
         self.answer_start_logits = predict_start_bidaf(config)
         self.mid_processing_layer = mid_processing_unit(config)
         self.answer_end_logits = predict_end_bidaf(config)
-    def forward(self,self_match_representation):
+    def forward(self,self_match_representation,span_tensor):
         start_logits = self.answer_start_logits(self_match_representation[0], self_match_representation[1])
         mid_processing = self.mid_processing_layer(self_match_representation[1])
         end_logits = self.answer_end_logits(self_match_representation[0], mid_processing)
-        return start_logits, end_logits
 
-        
+        _, index_start = torch.max(start_logits, 1)
+        _, index_end   = torch.max(end_logits,   1)
+
+        answer_start_batch = span_tensor[:,0]
+        answer_end_batch = span_tensor[:,1]
+
+
+        step_loss = self.loss_function(start_logits, answer_start_batch)
+        step_loss += self.loss_function(end_logits, answer_end_batch)
+
+        return step_loss,index_start, index_end
+
+
 class DCN_Dynamic_Decoder(nn.Module):
     def __init__(self, config):
-        super(Dynamic_Decoder, self).__init__()
+        super(DCN_Dynamic_Decoder, self).__init__()
         self.config = config
         self.max_number_of_iterations = self.config.max_number_of_iterations
 

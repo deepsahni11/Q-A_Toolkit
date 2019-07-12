@@ -9,7 +9,7 @@ import pickle
 import os
 import numpy as np
 
-from helper import *
+from Cross_Interaction_Layer_4.helper import *
 torch.manual_seed(4)
 np.random.seed(4)
 
@@ -28,9 +28,28 @@ DCN_cross_interaction:
    A_D_vector : B  x 1 x (m + 1)
 
 """
+class Cross_Interaction(nn.Module):
+    def __init__(self,config):
+        super(Cross_Interaction, self).__init__()
+        self.config = config
+        if(self.config.cross_interaction_type == "dcn"):
+            self.cross_interaction = DCN_cross_interaction(config)
+        elif(self.config.cross_interaction_type == "bidaf"):
+            self.cross_interaction = Bidaf_cross_interaction(config)
+        elif(self.config.cross_interaction_type == "gated_attention"):
+            self.cross_interaction = Gated_attention_cross_interaction(config)
+
+    def forward(self,question_representation, context_representation):
+        if(self.config.cross_interaction_type == "gated_attention"):
+            updated_document_matrix = self.cross_interaction(question_representation, context_representation)
+            return updated_document_matrix
+        else:
+            query_attention_matrix,document_attention_matrix,query_attention_vector,document_attention_vector = self.cross_interaction(question_representation, context_representation)
+            return query_attention_matrix,document_attention_matrix,query_attention_vector,document_attention_vector
 
 class Gated_attention_cross_interaction(nn.Module):
     def __init__(self,config):
+        super(Gated_attention_cross_interaction, self).__init__()
         self.config = config
         self.similarity_matrix = Cosine_Similarity(config)
         self.softmax = torch.nn.Softmax()
@@ -43,9 +62,10 @@ class Gated_attention_cross_interaction(nn.Module):
         S_softmax = self.softmax(S,dim = 2) # B x m x n
 
         q_matrix = torch.bmm(S_softmax, Q) # B x n x 2l
-        x_matrix = q_matrix + D  # B x m x 2l
+        document_x_matrix = q_matrix + D  # B x m x 2l
 
-        return x_matrix
+        # returns updated document matrix because gated attention reader has no self interaction layer
+        return document_x_matrix
 class Bidaf_cross_interaction(nn.Module):
     def __init__(self,config):
         super(Bidaf_cross_interaction, self).__init__()
@@ -76,7 +96,7 @@ class Bidaf_cross_interaction(nn.Module):
 class DCN_cross_interaction(nn.Module):
     def __init__(self,config):
     #hidden_dim, maxout_pool_size, embedding_matrix, max_number_of_iterations, dropout_ratio):
-        super(DCN_Coattention_Encoder, self).__init__()
+        super(DCN_cross_interaction, self).__init__()
         self.config = config
         ## nn.Linear(input_dim, output_dim)
         # Affine mapping from l ==> l

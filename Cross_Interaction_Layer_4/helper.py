@@ -61,7 +61,7 @@ class bidaf_bilinear(nn.Module): # similarity matrix for BiDAF paper
 
 class Cosine_Similarity(nn.Module): # similarity matrix for DCN paper
     def __init__(self,config):
-
+        super(Cosine_Similarity, self).__init__()
         self.config = config
         self.question_proj = nn.Linear(self.config.hidden_dim, self.config.hidden_dim)
 

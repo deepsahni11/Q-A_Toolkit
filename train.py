@@ -13,9 +13,10 @@ import os
 torch.manual_seed(4)
 np.random.seed(4)
 
-class Train_Model:
+class Train_Model(nn.Module):
 
     def __init__(self, config, model):
+        super(Train_Model, self).__init__()
         self.config = config
         self.model = model
         self.loss_function = torch.nn.CrossEntropyLoss()

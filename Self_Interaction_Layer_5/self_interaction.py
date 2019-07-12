@@ -8,7 +8,7 @@ import pickle
 import os
 import numpy as np
 
-from helper import *
+from Self_Interaction_Layer_5.helper import *
 
 torch.manual_seed(4)
 np.random.seed(4)
@@ -30,18 +30,28 @@ DCN_self_interaction:
            document_word_sequence_mask
    OUTPUTS: U (final document representation after passing though bi-lstm)
 """
+class Self_Interaction(nn.Module):
+    def __init__(self,config):
+        super(Self_Interaction, self).__init__()
+        self.config = config
+        if(self.config.self_interaction_type == "dcn"):
+            self.self_interaction = DCN_self_interaction(config)
+        elif(self.config.self_interaction_type == "bidaf"):
+            self.self_interaction = Bidaf_self_interaction(config)
 
-
+    def forward(self,query_attention_matrix,document_attention_matrix,query_attention_vector,document_attention_vector):
+        output = self.self_interaction(query_attention_matrix,document_attention_matrix,query_attention_vector,document_attention_vector)
+        return self_interaction_output
 class Bidaf_self_interaction(nn.Module):
 
     def __init__(self,config):
-    super(Bidaf_self_interaction, self).__init__()
+        super(Bidaf_self_interaction, self).__init__()
 
-    self.config = config
-    self.self_match = bidaf_self_match(self.config.input_size, self.config.hidden_size, num_layers=1, bidirectional=True, dropout=0, batch_first=True)
+        self.config = config
+        self.self_match = bidaf_self_match(self.config.input_size, self.config.hidden_size, num_layers=1, bidirectional=True, dropout=0, batch_first=True)
 
-    self.document_aware_query = documentAwareQuery(self.config.daq_rep)
-    self.query_aware_document = queryAwareDocument(self.config.qad_rep)
+        self.document_aware_query = documentAwareQuery(self.config.daq_rep)
+        self.query_aware_document = queryAwareDocument(self.config.qad_rep)
 
     def forward(self,passage_representation, question_represenation, b_attention_query_vector,S_attention_document):
         document_aware_query_rep_matrix = self.document_aware_query(passage_representation, question_represenation, b_attention_query_vector)
@@ -49,7 +59,7 @@ class Bidaf_self_interaction(nn.Module):
 # passage_vectors, query_vectors, query_aware_passage_rep ,query_aware_passage_mat, passage_aware_query_rep, passage_aware_query_mat
         self_match_representation = self.self_match(passage_representation,question_represenation,query_aware_document_rep_vector,None,None,document_aware_query_rep_matrix)
 
-        retrun self_match_representation
+        return self_match_representation
 
 
 

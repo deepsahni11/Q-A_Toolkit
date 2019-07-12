@@ -72,7 +72,7 @@ with open(config.data_dir + "glove_word_embeddings.pkl", "rb") as input_file:
     embedding_matrix = pickle.load(input_file)
 
 with autograd.set_detect_anomaly(True):
-    model = DCN_Model(config.hidden_dim, embedding_matrix, config.dropout_ratio, config.maxout_pool_size, config.max_number_of_iterations)
+    model = DCN_Model(config, embedding_matrix)
     # config = Config()
     # model = model.cpu()
     train_model = Train_Model(config, model)
