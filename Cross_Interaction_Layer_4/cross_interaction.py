@@ -116,10 +116,11 @@ class DCN_cross_interaction(nn.Module):
         # pass the Q tensor through a non-linearity
         ## L = cosine similarity matrix
         L = self.similarity_matrix(Q,D)
+        L_transpose = torch.transpose(L,1,2)
 
 
         A_Q_matrix = F.softmax(L, dim=2) # B x (m + 1) x (n + 1)
-        A_D_matrix = F.softmax(L_tranpose, dim=2)  # B x (n + 1) x (m + 1)
+        A_D_matrix = F.softmax(L_transpose, dim=2)  # B x (n + 1) x (m + 1)
 
         # A_Q and A_D are attention weights
 

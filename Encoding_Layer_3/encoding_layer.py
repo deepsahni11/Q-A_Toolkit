@@ -49,12 +49,12 @@ class Encoding_Layer(nn.Module):
         #word_sequence_indexes, word_sequence_mask
 
         # word_sequence_packed is a tensor of dimension of B x m x l
-        batch_size = word_sequence_indexes.size()[0]
-
-        initial_hidden_states = self.initHidden(batch_size)
-
-        output, hidden_state_final = self.encoder(word_sequence_packed,initial_hidden_states)
-        output_padded, _ = pad_packed_sequence(output, batch_first=True)
+        # batch_size = word_sequence_indexes.size()[0]
+        #
+        # initial_hidden_states = self.initHidden(batch_size)
+        #
+        # output, hidden_state_final = self.encoder(word_sequence_packed,initial_hidden_states)
+        # output_padded, _ = pad_packed_sequence(output, batch_first=True)
 
         length_per_instance = torch.sum(word_sequence_mask, 1)
 

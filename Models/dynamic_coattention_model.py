@@ -43,7 +43,11 @@ class DCN_Model(nn.Module):
 
         # A_Q_matrix,A_D_matrix,A_Q_vector,A_D_vector,question_representation, context_representation,document_word_sequence_mask
         U_matrix = self.self_interaction(query_attention_matrix,document_attention_matrix,query_attention_vector,document_attention_vector,question_representation, passage_representation,context_word_mask)
-
+        # print(self.decoder(U_matrix, context_word_mask, span_tensor))
         loss, index_start, index_end = self.decoder(U_matrix, context_word_mask, span_tensor)
+        # X = self.decoder(U_matrix, context_word_mask,span_tensor)
+        # print(len(X), X)
+        # print("Done Stop")
+        # print(loss, index_start, index_end)
 
         return loss, index_start, index_end

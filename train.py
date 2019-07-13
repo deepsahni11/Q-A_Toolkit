@@ -23,17 +23,17 @@ class Train_Model(nn.Module):
         self.parameters_trainable = list(filter(lambda p: p.requires_grad, self.model.parameters()))
         self.optimizer = optim.Adam(self.parameters_trainable, lr=self.config.lr)
 
-        self.glove_path = os.path.join(config.data_dir, "glove_word_embeddings.pkl")
-        self.num_epochs = config.num_epochs
-        self.data_dir = config.data_dir
-        self.names = config.names
-        self.batch_size = config.batch_size
-        self.print_every = config.print_every
-        self.max_context_length = config.max_context_length
-        self.max_question_length = config.max_question_length
-        self.model_dir = config.model_dir
-        self.early_stop = config.early_stop
-        self.print_and_validate_every = config.print_and_validate_every
+        self.glove_path = os.path.join(self.config.data_dir, "glove_word_embeddings.pkl")
+        self.num_epochs = self.config.num_epochs
+        self.data_dir = self.config.data_dir
+        self.names = self.config.names
+        self.batch_size = self.config.batch_size
+        self.print_every = self.config.print_every
+        self.max_context_length = self.config.max_context_length
+        self.max_question_length = self.config.max_question_length
+        self.model_dir = self.config.model_dir
+        self.early_stop = self.config.early_stop
+        self.print_and_validate_every = self.config.print_and_validate_every
 
     def save_model(self, model, optimizer, loss, global_step, epoch ,prefix):
         # A state_dict is simply a Python dictionary object that maps each layer to its parameter tensor
@@ -121,7 +121,7 @@ class Train_Model(nn.Module):
 
         return validation_loss
 
-    def get_data(self, batch, is_train=True):
+    def get_data(self, batch, is_train):
 
         question_word_index_batch = batch.question_word_index_batch
 
@@ -155,9 +155,7 @@ class Train_Model(nn.Module):
 
         # self.model.eval()
 
-        context_word_index_batch, question_word_index_batch,  span_tensor_batch = self.get_data(batch)
-
-#         print(context_word_index_batch)
+        context_word_index_batch, question_word_index_batch,  span_tensor_batch = self.get_data(batch,True)
 
 
         context_word_index_padded_per_batch = Variable(pad_data(context_word_index_batch))
@@ -189,12 +187,10 @@ class Train_Model(nn.Module):
 
     def train_one_batch(self, batch):
 
-
-
-
-        self.model.train()
+        # self.model.train()
         self.optimizer.zero_grad()
-        context_word_index_batch, question_word_index_batch,  span_tensor_batch = self.get_data(batch)
+        context_word_index_batch, question_word_index_batch,  span_tensor_batch = self.get_data(batch,True)
+        # print(context_word_index_batch, question_word_index_batch,  span_tensor_batch)
 
 
 
@@ -218,36 +214,32 @@ class Train_Model(nn.Module):
 
         span_tensor_batch.requires_grad = False
 
-        loss, _, _ = self.model(context_word_index_padded_per_batch,context_word_mask_per_batch_new, question_word_index_padded_per_batch, question_word_mask_per_batch_new, span_tensor_batch)
+        # print(context_word_index_padded_per_batch.size())
+        # print(context_word_mask_per_batch_new.size())
+        # print(question_word_index_padded_per_batch.size())
+        # print(question_word_mask_per_batch_new.size())
+        # print(span_tensor_batch.size())
+
+        loss,_,_ = self.model(context_word_index_padded_per_batch,context_word_mask_per_batch_new, question_word_index_padded_per_batch, question_word_mask_per_batch_new, span_tensor_batch)
 
 
-
-#         print(loss)
-
-#         l2_reg = None
-#         for W in self.parameters:
-
-#             if l2_reg is None:
-#                 l2_reg = W.norm(2)
-#             else:
-#                 l2_reg = l2_reg + W.norm(2)
-#         loss = loss + config.reg_lambda * l2_reg
-
+        # print(loss)
 
 
         loss.backward()
 
-
-
-        param_norm = self.get_param_norm(self.parameters_trainable)
-        grad_norm = self.get_grad_norm(self.parameters_trainable)
+        #
+        #
+        # param_norm = self.get_param_norm(self.parameters_trainable)
+        # grad_norm = self.get_grad_norm(self.parameters_trainable)
 
 
 #         clip_grad_norm_(parameters, config.max_grad_norm)
         self.optimizer.step()
 
 
-        return loss.item(), param_norm, grad_norm
+        return loss.item()
+        # , param_norm, grad_norm
 
 
     def train(self):
@@ -270,8 +262,9 @@ class Train_Model(nn.Module):
                 global_step += 1
                 iter_tic = time.time()
 
-                train_batch_loss, param_norm, grad_norm = self.train_one_batch(batch)
-
+                # print("Inside train")
+                train_batch_loss = self.train_one_batch(batch)
+                # print(train_batch_loss)
 #                 total_loss = total_loss + loss
 #                 loss_array.append(total_loss)
 

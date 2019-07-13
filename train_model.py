@@ -21,7 +21,7 @@ import Output_Layer_10.mid_processingoutputlayer as mid_processingoutputlayer
 #import dataset_iterator_drop
 #import dataset_iterator_squad
 
-import os 
+import os
 #import squad_eval
 from numpy import genfromtxt
 from torch.autograd import Variable
@@ -31,17 +31,18 @@ from torch import zeros, from_numpy, Tensor, LongTensor, FloatTensor
 import pickle
 
 import torch.backends.cudnn as cudnn
-cudnn.benchmark = False 
+cudnn.benchmark = False
 
-class TrainModel:
+class Train_Model(nn.Module):
 
     def __init__(self, config, model):
+        super(Train_Model, self).__init__()
         self.config = config
         self.model = model
         self.loss_fn = torch.nn.CrossEntropyLoss()
         self.parameters_trainable = list(filter(lambda p: p.requires_grad, self.model.parameters()))
 		self.outdir="D:/Downloads/SQuAD/"
-		
+
         if (self.config.optim == "Adadelta"):
             self.optimizer = optim.Adadelta(self.parameters_trainable, lr = self.config.lr, rho=0.95)
         else:
@@ -62,7 +63,7 @@ class TrainModel:
          #                                          embedding_dir = embedding_dir)
 
     #self.word_embeddings = pickle.load(open(os.path.join(embedding_dir , "embeddings_word50.pkl"))
-        
+
         #self.vocab.convert_all_files(data_dir)
 
     def load_data(self, data_dir="D:/Downloads/SQuAD/"):
@@ -102,7 +103,7 @@ class TrainModel:
             query_batches = temp_batch["query"]
 
             for l,v in query_batches.items():
-                query_batches[l] = Variable(torch.LongTensor(v)) 
+                query_batches[l] = Variable(torch.LongTensor(v))
                 query_batches[l].requires_grad = False
 
 
@@ -117,8 +118,8 @@ class TrainModel:
 
             #temp_batch_data = temp_batch["context_words"]
             #temp_batch_gt   = temp_batch["ground_truths"]
-            
-                
+
+
         #exact_match, f1 = squad_eval.evaluate(ground_truths, predictions)
         #if whole_dataset == True:
          #   pickle.dump(pred, open(os.path.join(self.config.outdir, "predictions_" + name + epoch + ".pkl"), "w"))
@@ -126,7 +127,7 @@ class TrainModel:
         #self.model.train()
         #print ("Scores are :",  exact_match, f1)
         #gc.collect()
-        return total_loss/num_steps 
+        return total_loss/num_steps
 
 
     def run_epoch(self, epoch_num):
@@ -159,7 +160,7 @@ class TrainModel:
             query_batches = temp_batch["query"]
 
             for l,v in query_batches.items():
-                query_batches[l] = Variable(torch.LongTensor(v)) 
+                query_batches[l] = Variable(torch.LongTensor(v))
                 query_batches[l].requires_grad = False
 
 
@@ -180,7 +181,7 @@ class TrainModel:
                     print ("Epoch : {} Step : {} Validation Loss : {} Test Loss " .format(epoch_num, i, valid_loss, test_loss))
 
             del temp_batch, step_loss, answer_start_batch, answer_end_batch, begin_logits, end_logits,  content_batches, query_batches
-            #gc.collect()  
+            #gc.collect()
         return total_loss/(num_steps)
 
 

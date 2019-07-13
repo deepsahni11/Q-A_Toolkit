@@ -34,10 +34,12 @@ class Decoder(nn.Module):
             self.decoder = DCN_Dynamic_Decoder(self.config)
 
     def forward(self,output_to_self_interaction,document_word_sequence_mask,span_tensor):
-        if(self.config.decoder == "bidaf"):
+        if(self.config.decoder_type == "bidaf"):
             loss,index_start,index_end = self.decoder(output_to_self_interaction,span_tensor)
-        elif(self.config.decoder == "dcn"):
+            return loss,index_start,index_end
+        elif(self.config.decoder_type == "dcn"):
             loss,index_start,index_end = self.decoder(output_to_self_interaction,document_word_sequence_mask,span_tensor)
+            return loss,index_start,index_end
 
 class BIDAF_decoder(nn.Module):
     def __init__(self,config):
@@ -53,7 +55,7 @@ class BIDAF_decoder(nn.Module):
         end_logits = self.answer_end_logits(self_match_representation[0], mid_processing)
 
         _, index_start = torch.max(start_logits, 1)
-        _, index_end   = torch.max(end_logits,   1)
+        _, index_end   = torch.max(end_logits,  1)
 
         answer_start_batch = span_tensor[:,0]
         answer_end_batch = span_tensor[:,1]
@@ -204,13 +206,12 @@ class DCN_Dynamic_Decoder(nn.Module):
 
         loss = None
 
-#         print("step_losses")
-#         print(sum(step_losses))
         if span_tensor is not None:
             # step losses has dimension = num_iterations x B
             sum_losses = sum(step_losses)
             batch_avg_loss = sum_losses / self.max_number_of_iterations
             loss = batch_avg_loss
 
-
+        # X = [loss, index_start, index_end]
+        # print (X, len(X))
         return loss, index_start, index_end

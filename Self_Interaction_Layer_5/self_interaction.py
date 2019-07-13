@@ -39,8 +39,8 @@ class Self_Interaction(nn.Module):
         elif(self.config.self_interaction_type == "bidaf"):
             self.self_interaction = Bidaf_self_interaction(config)
 
-    def forward(self,query_attention_matrix,document_attention_matrix,query_attention_vector,document_attention_vector):
-        output = self.self_interaction(query_attention_matrix,document_attention_matrix,query_attention_vector,document_attention_vector)
+    def forward(self,query_attention_matrix,document_attention_matrix,query_attention_vector,document_attention_vector,question_representation, context_representation,document_word_sequence_mask):
+        self_interaction_output = self.self_interaction(query_attention_matrix,document_attention_matrix,query_attention_vector,document_attention_vector,question_representation, context_representation,document_word_sequence_mask)
         return self_interaction_output
 class Bidaf_self_interaction(nn.Module):
 
@@ -69,12 +69,14 @@ class DCN_self_interaction(nn.Module):
         super(DCN_self_interaction, self).__init__()
 
         self.config = config
+        self.question_proj = nn.Linear(self.config.hidden_dim, self.config.hidden_dim)
         self.fusion_bilstm = Fusion_BiLSTM(self.config.hidden_dim, self.config.dropout_ratio)
 
     def forward(self,A_Q_matrix,A_D_matrix,A_Q_vector,A_D_vector,question_representation, context_representation,document_word_sequence_mask):
 
         Q = question_representation
         # transpose(tensor, first_dimension to be transposed, second_dimension to be transposed)
+        Q_non_linearity = torch.tanh(self.question_proj(Q.view(-1, self.config.hidden_dim))).view(Q.size())
         Q_transpose = torch.transpose(Q_non_linearity, 1, 2) #dimension: B x l x (n + 1)
 
         D = context_representation
@@ -88,7 +90,7 @@ class DCN_self_interaction(nn.Module):
         C_Q = torch.bmm(D_transpose, A_Q) # (B x l x (m + 1)) x (B x (m + 1) x (n + 1)) => B x l x (n + 1)
 
         L = torch.bmm(D, Q_transpose)
-        L_tranpose = torch.transpose(L,1,2)
+        L_transpose = torch.transpose(L,1,2)
 
 
 

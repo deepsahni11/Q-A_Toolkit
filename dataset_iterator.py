@@ -3,7 +3,7 @@
 
 from __future__ import absolute_import
 from __future__ import division
-
+from torch import nn
 import torch
 import random
 import re
@@ -18,11 +18,11 @@ np.random.seed(4)
 import numpy as np
 from six.moves import xrange
 
-class Batch():
+class Batch(nn.Module):
     """A class to hold the information needed for a training batch"""
     def __init__(self,names,context_word_index_batch,question_word_index_batch, span_tensor_batch,context_tokens_batch,questions_tokens_batch,answer_tokens_batch):
 
-
+        super(Batch, self).__init__()
         self.names = names
         self.context_word_index_batch = context_word_index_batch
 

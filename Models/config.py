@@ -5,8 +5,10 @@ class Config(object):
 
 config = Config()
 # E:\Internships_19\Internship(Summer_19)\Q&A_Toolkit\Dynamic_Coattention_Networks\Models\saved_models
-config.data_dir = "E:\\Internships_19\\Internship(Summer_19)\\Q&A_Toolkit\\Dataset_analysis\\SQuAD\\"
-config.model_dir = "E:\\Internships_19\\Internship(Summer_19)\\Q&A_Toolkit\\Dynamic_Coattention_Networks\\Models\\saved_models\\"
+# config.data_dir = "E:\\Internships_19\\Internship(Summer_19)\\Q&A_Toolkit\\Dataset_analysis\\SQuAD\\"
+# config.model_dir = "E:\\Internships_19\\Internship(Summer_19)\\Q&A_Toolkit\\Dynamic_Coattention_Networks\\Models\\saved_models\\"
+config.data_dir = "Dynamic_Coattention_Networks/data/"
+config.model_dir = "Dynamic_Coattention_Networks/Models/saved_models/"
 config.word_embedding_size = 100
 config.hidden_dim = 100
 # config.dropout_ratio = 0.15
@@ -31,16 +33,18 @@ config.vocab_size = 50000
 config.num_iterations = 2
 config.maxout_pool_size=16
 config.max_chars=10
-
+config.sentinel = True
 config.lr = 0.001
 config.dropout_ratio = 0.15
-
+config.query_non_linearity = True
 config.max_grad_norm = 5.0
 config.batch_size = 20
 config.num_epochs = 2
 config.print_every = 100
 config.max_number_of_iterations = 5
 config.print_and_validate_every = 2
+# config.optim = "Adadelta"
+# config.decoder = "dcn"
 # config.print_every = 100
 # config.save_every = 50000000
 # config.eval_every = 1000
