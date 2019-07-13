@@ -37,9 +37,9 @@ class Data_pad:
     def pickle_padded_sequence(self, prefix):
         self.out_prefix = prefix
        
-        with open(self.data_path + "\\" + prefix + "_word_index.context_pkl.pkl", "rb") as input_file:
+        with codecs.open(self.data_path + "\\" + prefix + "_word_index.context_pkl.pkl", "rb") as input_file:
             context_word_index = pickle.load(input_file)
-        with open(self.data_path + "\\" + prefix + "_word_index.context_pkl.pkl", "rb") as input_file:
+        with codecs.open(self.data_path + "\\" + prefix + "_word_index.context_pkl.pkl", "rb") as input_file:
             question_word_index = pickle.load(input_file)
 
         self.pad_data(self.out_prefix,context_word_index)
@@ -69,5 +69,5 @@ class Data_pad:
             padded_data.append(temp)
 
         padded_data = torch.from_numpy(np.array(padded_data)).int()
-        pickle.dump(padded_data, open(os.path.join(self.data_path, self.out_prefix + "_word_index_padded.pkl"), "wb")) 
+        pickle.dump(padded_data, codecs.open(os.path.join(self.data_path, self.out_prefix + "_word_index_padded.pkl"), "wb")) 
    

@@ -8,12 +8,12 @@ import numpy as np
 import os
 import spacy
 # import ujson as json
-import urllib.request
+#import urllib.request
 import numpy as np
 # from args import get_setup_args
 from codecs import open
 from collections import Counter
-from subprocess import run
+#from subprocess import run
 from tqdm import tqdm
 from zipfile import ZipFile
 

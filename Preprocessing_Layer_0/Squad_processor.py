@@ -4,7 +4,7 @@ import numpy as np
 import json
 import spacy
 import nltk
-
+import codecs
 
 class Squad_preprocessor():
     def __init__(self,tokenizer,data_directory):
@@ -49,14 +49,14 @@ class Squad_preprocessor():
 
 
 #         counter = 0
-        with open(os.path.join(self.data_directory, self.out_prefix +'.context'), 'w', encoding='utf-8') as context_file, \
-             open(os.path.join(self.data_directory, self.out_prefix +'.question'), 'w', encoding='utf-8') as question_file, \
-             open(os.path.join(self.data_directory, self.out_prefix + '.answer_text'), 'w', encoding= 'utf-8') as answer_text_file, \
-             open(os.path.join(self.data_directory, self.out_prefix + '.answer_start'), 'w', encoding= 'utf-8') as answer_start_file, \
-             open(os.path.join(self.data_directory, self.out_prefix + '.answer_end'), 'w', encoding= 'utf-8') as answer_end_file:
+        with codecs.open(os.path.join(self.data_directory, self.out_prefix +'.context'), 'w', encoding='utf-8') as context_file, \
+             codecs.open(os.path.join(self.data_directory, self.out_prefix +'.question'), 'w', encoding='utf-8') as question_file, \
+             codecs.open(os.path.join(self.data_directory, self.out_prefix + '.answer_text'), 'w', encoding= 'utf-8') as answer_text_file, \
+             codecs.open(os.path.join(self.data_directory, self.out_prefix + '.answer_start'), 'w', encoding= 'utf-8') as answer_start_file, \
+             codecs.open(os.path.join(self.data_directory, self.out_prefix + '.answer_end'), 'w', encoding= 'utf-8') as answer_end_file:
 
 
-                    for article_idx in range(len(self.data["data"])):
+                    for article_idx in tqdm.tqdm(range(len(self.data["data"]))):
                         paragraphs = self.data["data"][article_idx]["paragraphs"] ## all the paragraphs in data directory
 
                         for paragraph_idx in range(len(paragraphs)):
