@@ -30,10 +30,11 @@ class bidaf_bilinear(nn.Module): # similarity matrix for BiDAF paper
     def __init__(self, passage_vec_size, query_vec_size):
         super(bidaf_bilinear, self).__init__()
 
-        self.w_concat = autograd.Variable(torch.randn(1,1,2*passage_vec_size).type(torch.FloatTensor))
-        self.w_query = autograd.Variable(torch.randn(1,1,2*query_vec_size).type(torch.FloatTensor))
-        self.w_passage = autograd.Variable(torch.randn(1,1,2*passage_vec_size).type(torch.FloatTensor))
-        self.passage_vec_size = passage_vec_size
+        self.w_concat = autograd.Variable(torch.randn(1,1,2*passage_vec_size).type(torch.FloatTensor)) #1 x 1 x 2*l l=> hidden size
+        
+        self.w_query = autograd.Variable(torch.randn(1,1,2*query_vec_size).type(torch.FloatTensor))  #1 x 1 x 2*l
+        self.w_passage = autograd.Variable(torch.randn(1,1,2*passage_vec_size).type(torch.FloatTensor)) #1 x 1 x 2*l
+        self.passage_vec_size = passage_vec_size 
         self.query_vec_size = query_vec_size
 
         self.w_concat = torch.nn.init.xavier_normal_(self.w_concat)
@@ -42,22 +43,27 @@ class bidaf_bilinear(nn.Module): # similarity matrix for BiDAF paper
 
 
     def forward(self, batch_size, passage_vectors, query_vectors, passage_length, query_length):
-        temp_w_passage = passage_vectors * self.w_concat
+        
+        temp_w_passage = passage_vectors * self.w_concat #B x p x 2*l  p=>passage length
+        
+        
+        query_vector_permute = query_vectors.permute(0,2,1)  #B x 2*l x q q=> query length
+        
+        w_concat_m = torch.bmm (temp_w_passage, query_vector_permute)  #B x p x q
+    
+        w_passage = self.w_passage * passage_vectors #B x p x 2*l
+     
+        w_passage = torch.sum(w_passage, dim=2) #B x p
+        
+        w_passage = torch.unsqueeze(w_passage, dim=2).repeat(1,1, query_length) #B x p x q
+    
+        w_query = self.w_query * query_vectors #B x q x 2*l
+        
+        w_query = torch.sum(w_query, dim=2) #B x q
+        w_query = torch.unsqueeze(w_query, dim=1).repeat(1, passage_length, 1) #B x p x q
+        dot_product = w_passage + w_query + w_concat_m #B x p x q
 
-        query_vector_permute = query_vectors.permute(0,2,1)
-        w_concat_m = torch.bmm (temp_w_passage, query_vector_permute)
-
-        w_passage = self.w_passage * passage_vectors
-        w_passage = torch.sum(w_passage, dim=2)
-        w_passage = torch.unsqueeze(w_passage, dim=2).repeat(1,1, query_length)
-
-        w_query = self.w_query * query_vectors
-        w_query = torch.sum(w_query, dim=2)
-        w_query = torch.unsqueeze(w_query, dim=1).repeat(1, passage_length, 1)
-        dot_product = w_passage + w_query + w_concat_m
-
-
-        return dot_product
+        return dot_product 
 
 class Cosine_Similarity(nn.Module): # similarity matrix for DCN paper
     def __init__(self,config):
