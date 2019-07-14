@@ -164,7 +164,7 @@ class BiDAF(nn.Module):
         encoded_query   = self.word_embed_mat(query_batches["token"])
 
         temp1 = content_batches["tokenchar_"]
-        temp1_size = content_batches["token_char"].size()
+        temp1_size = content_batches["tokenchar_"].size()
         temp1 = temp1.view(self.config.batch_size, -1)
         encoded_content_char = self.char_embed_mat(temp1)
         encoded_content_char = encoded_content_char.view(temp1_size[0], temp1_size[1], temp1_size[2], -1)
