@@ -11,10 +11,10 @@ from torch import autograd
 import Embedding_Layer_1.embedding as embedding
 import Encoding_Layer_3.encoding_layer as encoding_layer
 import Cross_Interaction_Layer_4.bilinear_compute as bilinear_compute
-import Embedding_Combination_Layer(2).encoding_combination_layer as encoding_combination_layer
+import Embedding_Combination_Layer_2.encoding_combination_layer as encoding_combination_layer
 import Cross_Interaction_Layer_4.query_aware_document_representation as query_aware_document_representation
 import Cross_Interaction_Layer_4.document_aware_query_representation as document_aware_query_representation
-import Self-Interaction_Layer(5).self_match as self_match
+import Self-Interaction_Layer_5.self_match as self_match
 import dataset_iterator_squad
 import Output_Layer_10.predict_start as predict_start
 import Output_Layer_10.predict_end as predict_end
