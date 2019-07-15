@@ -14,12 +14,12 @@ np.random.seed(4)
 class predict_start_bidaf(nn.Module):
 
     def __init__(self, config):
-
+        super(predict_start_bidaf, self).__init__()
         self.config = config
         input_size = self.config.hidden_dim
         super(predict_start_bidaf, self).__init__()
-        self.w = torch.autograd.Variable(torch.Tensor(10*input_size, 1).type(torch.cuda.FloatTensor))
-        init.xavier_normal(self.w)
+        self.w = torch.autograd.Variable(torch.Tensor(10*input_size, 1))
+        nn.init.xavier_normal(self.w)
 
     def forward(self, *args):
 
@@ -48,17 +48,18 @@ class mid_processing_unit(nn.Module):
         super(mid_processing_unit, self).__init__()
         # input_size, bidirectional, dropout, mid_processing
         self.config = config
+        self.hidden_size = self.config.hidden_dim
         # self.mid_processing = self.config.mid_processing
-        self.init_variables(self.config.input_size, self.config.bidirectional, self.config.dropout, self.config.mid_processing)
+        if(self.config.mid_processing == True):
+            self.encode_layer = torch.nn.GRU(2*self.hidden_size, hidden_size = self.hidden_size, num_layers=1,bidirectional= self.config.bidirectional,dropout=self.config.dropout,batch_first = True)
+
+        # self.init_variables(self.config.hidden_dim, self.config.bidirectional, self.config.dropout, self.config.mid_processing)
 
 
-    def init_variables(self, input_size, bidirectional, dropout, mid_processing='bidaf'):
-        if mid_processing == 'bidaf':
-            self.encode_layer = torch.nn.GRU(2*input_size, hidden_size = input_size, num_layers=1,
-                                    bidirectional=bidirectional,
-                                    dropout=dropout,
-                                    batch_first = True)
-            self.hidden_size = input_size
+    # def init_variables(self, input_size, bidirectional, dropout, mid_processing):
+    #     if mid_processing == True:
+    #
+            # self.hidden_size = input_size
 
     def forward(self, *args):
 
@@ -72,7 +73,7 @@ class mid_processing_unit(nn.Module):
         concat_rep = torch.cat(list_of_rep, dim=len(list_of_rep[0].size()) - 1)
 
         batch_size = concat_rep.size()[0]
-        h_p = torch.autograd.Variable(torch.zeros(2, batch_size, self.hidden_size).type(torch.cuda.FloatTensor), requires_grad=False)
+        h_p = torch.autograd.Variable(torch.zeros(2, batch_size, self.hidden_size).type(torch.FloatTensor), requires_grad=False)
 
         encoded_objs, _ = self.encode_layer(concat_rep, h_p)
         del h_p, batch_size
@@ -84,9 +85,9 @@ class predict_end_bidaf(nn.Module):
 
         super(predict_end_bidaf, self).__init__()
         self.config = config
-        input_size = self.config.hidden_size
+        input_size = self.config.hidden_dim
         self.w = torch.autograd.Variable(torch.Tensor(10*input_size, 1))
-        init.xavier_normal(self.w)
+        nn.init.xavier_normal(self.w)
 
     def forward(self, *args):
 

@@ -3,7 +3,7 @@ import numpy as np
 import os
 import tqdm as tqdm
 import pickle
-
+import torch.nn as nn
 import numpy as np
 import os
 import spacy
@@ -19,12 +19,15 @@ from zipfile import ZipFile
 
 
 
-class Embedding_Matrix():
+class Embedding_Matrix(nn.Module):
 
-    def __init__(self,embedding_dir):
+    def __init__(self,config):
 #         embedding_dir = "E:\\Internships_19\\Internship(Summer_19)\\Q&A_Toolkit\\Dataset_analysis\\SQuAD"
-        with open(os.path.join(embedding_dir , "dictionaries.pkl"), "rb") as input_file:
-            dictionaries = pickle.load(input_file)
+        super(Embedding_Matrix, self).__init__()
+        self.config = config
+        input_file =  open(os.path.join(self.config.data_dir , "dictionaries.pkl"), "rb")
+        # as input_file:
+        dictionaries = pickle.load(input_file)
         self.word_to_index = dictionaries["word_to_index"]
         self.char_to_index = dictionaries["char_to_index"]
         self.index_to_word = dictionaries["index_to_word"]
@@ -87,78 +90,69 @@ class Embedding_Matrix():
         for f in files:
             read_path_train = os.path.join(datapath, "train" + f)
             write_path_train_word = os.path.join(datapath, "train_word_index" + f + "_pkl.pkl")
-#             write_path_train_char = os.path.join(datapath, "train_char_index" + f + "_pkl.pkl")
+            write_path_train_char = os.path.join(datapath, "train_char_index" + f + "_pkl.pkl")
 
             read_path_valid = os.path.join(datapath, "validation" + f)
             write_path_valid_word = os.path.join(datapath, "validation_word_index" + f + "_pkl.pkl")
-#             write_path_valid_char = os.path.join(datapath, "validation_char_index" + f + "_pkl.pkl")
+            write_path_valid_char = os.path.join(datapath, "validation_char_index" + f + "_pkl.pkl")
 
 
 
             temp_train_word = self.index_files_using_word_to_index(read_path_train, self.word_to_index, max_words)
             temp_valid_word = self.index_files_using_word_to_index(read_path_valid, self.word_to_index, max_words)
 
-#             temp_train_char = index_files_using_char_to_index(read_path_train, self.char_to_index, max_words,max_chars)
-#             temp_valid_char = index_files_using_char_to_index(read_path_valid, self.char_to_index, max_words,max_chars)
+            temp_train_char = self.index_files_using_char_to_index(read_path_train, self.char_to_index, max_words,max_chars)
+            temp_valid_char = self.index_files_using_char_to_index(read_path_valid, self.char_to_index, max_words,max_chars)
 
             write_file_train_word = open(write_path_train_word, "wb")
             pickle.dump(temp_train_word, write_file_train_word)
 
-#             write_file_train_char = open(write_path_train_char, "wb")
-#             pickle.dump(temp_train_char, write_file_train_char)
+            write_file_train_char = open(write_path_train_char, "wb")
+            pickle.dump(temp_train_char, write_file_train_char)
 
             write_file_valid_word = open(write_path_valid_word, "wb")
             pickle.dump(temp_valid_word, write_file_valid_word)
 
-#             write_file_valid_char = open(write_path_valid_char, "wb")
-#             pickle.dump(temp_valid_char, write_file_valid_char)
+            write_file_valid_char = open(write_path_valid_char, "wb")
+            pickle.dump(temp_valid_char, write_file_valid_char)
 
     def get_glove_embeddings(self, word_embedding_size , char_embedding_size  , embedding_dir  ):
 
 
 
-        glove_embeddings = os.path.join(embedding_dir, "glove_embeddings100.txt")
+        word_embeddings_index = {}
+        file = open(self.config.data_dir + "glove_embeddings100.txt", "r", encoding="utf-8")
+        for line in file:
+            values = line.split(' ')
+            word = values[0] ## The first entry is the word
+            vector = np.asarray(values[1:], dtype='float32') ## These are the vectors representing the embedding for the word
+            word_embeddings_index[word] = vector
+        file.close()
+        word_embeddings_matrix = np.zeros((len(self.word_to_index), 100))
+        for word, i in self.word_to_index.items():
+            embedding_vector = word_embeddings_index.get(word) ## This references the loaded embeddings dictionary
+            if embedding_vector is not None:
+                # words not found in embedding index will be all-zeros.
+                word_embeddings_matrix[i] = embedding_vector
 
-        glove_embeddings = open(glove_embeddings,'r', encoding = 'utf-8')
-
-
-
-        #     glove_embeddings = pickle.load(open(glove_embeddings))
-
-        #####################  CHECK HOW GLOVE EMBEDDINGS WORK ##############
-        temp_embeddings = []
-
-        for word in self.word_to_index:
-
-                if word in ['<pad>', '<sos>']:
-                    temp_vector = np.zeros((word_embedding_size))
-                elif word not in glove_embeddings:
-                    temp_vector = np.random.uniform(-np.sqrt(3)/np.sqrt(word_embedding_size), np.sqrt(3)/np.sqrt(word_embedding_size), word_embedding_size)
-                else:
-                    temp_vector = glove_embeddings[word]
-
-                temp_embeddings.append(temp_vector)
-
-        temp_embeddings = np.asarray(temp_embeddings)
-        temp_embeddings = temp_embeddings.astype(np.float32)
-        self.word_embeddings = temp_embeddings
+        # word_embeddings = embedding_matrix
 
 
-#         char_embeddings = []
-# #         print (char_embedding_size)
-#         char_embeddings.append(np.zeros((char_embedding_size)))
+        char_embeddings = []
+#         print (char_embedding_size)
+        char_embeddings.append(np.zeros((char_embedding_size)))
 
-#         for i in range(len(self.char_to_index)):
-#             temp_vector = np.random.uniform(-np.sqrt(3)/np.sqrt(char_embedding_size), np.sqrt(3)/np.sqrt(char_embedding_size), char_embedding_size)
-#             char_embeddings.append(temp_vector)
+        for i in range(len(self.char_to_index)):
+            temp_vector = np.random.uniform(-np.sqrt(3)/np.sqrt(char_embedding_size), np.sqrt(3)/np.sqrt(char_embedding_size), char_embedding_size)
+            char_embeddings.append(temp_vector)
 
-#         char_embeddings = np.asarray(char_embeddings)
-#         char_embeddings = char_embeddings.astype(np.float32)
+        char_embeddings = np.asarray(char_embeddings)
+        char_embeddings = char_embeddings.astype(np.float32)
 
-#         self.char_embeddings = char_embeddings
+        # self.char_embeddings = char_embeddings
 
-#         pickle.dump(char_embeddings, open(os.path.join(embedding_dir, "char_embeddings" + ".pkl"), "wb"))
-        pickle.dump(temp_embeddings, open(os.path.join(embedding_dir, "glove_word_embeddings" + ".pkl"), "wb"))
+        pickle.dump(char_embeddings, open(os.path.join(embedding_dir, "char_embeddings" + ".pkl"), "wb"))
+        pickle.dump(word_embeddings_matrix, open(os.path.join(embedding_dir, "glove_word_embeddings" + ".pkl"), "wb"))
 
 
 #         return self.word_embeddings, self.char_embeddings

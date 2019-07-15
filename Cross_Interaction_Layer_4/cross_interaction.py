@@ -70,12 +70,12 @@ class Bidaf_cross_interaction(nn.Module):
     def __init__(self,config):
         super(Bidaf_cross_interaction, self).__init__()
         self.config = config
-        self.softmax_f = torch.nn.Softmax()
+        self.softmax_function = torch.nn.Softmax()
         self.bilinear_similarity_matrix = bidaf_bilinear(self.config.hidden_dim, self.config.hidden_dim)
 
     def forward(self, question_representation, context_representation):
-        Q = question_representation # B x (n) x l
-        D = context_representation  # B x (m) x l
+        Q = question_representation # B x n x l
+        D = context_representation  # B x m x l
 
         # view function is meant to reshape the tensor.(Similar to reshape function in numpy)
         # view( row_size = -1 ,means that number of rows are unknown, column_size)
@@ -83,12 +83,17 @@ class Bidaf_cross_interaction(nn.Module):
         ## L = cosine similarity matrix
         # self.config.batch_size, passage_encodings, query_encodings, passage_combine_embeddings.size()[1], query_combine_embeddings.size()[1]
         S = self.bilinear_similarity_matrix(self.config.batch_size,D,Q,D.size()[1],Q.size()[1])
+        # print("S" + str(S.size()))
         S_max_col_query, _ = torch.max(S, dim = 2) # B x m(or T)
+        # print("S_max_col_query" + str(S_max_col_query.size()))
         S_max_col_query_resized = torch.unsqueeze(S_max_col_query, 2) # B x m(or T) x 1
-        b_attention_query_vector = softmax(S_max_col_query_resized, axis = 1, f = self.softmax_f)
-
-        S_softmax_document = softmax(S, axis=1, f= self.softmax_f)
-        S_attention_document = S_softmax_document.permute(0,2,1)
+        # print("S_max_col_query_resized" + str(S_max_col_query_resized.size()))
+        b_attention_query_vector = softmax(S_max_col_query_resized, axis = 1, f = self.softmax_function)
+        # print("b_attention_query_vector" + str(b_attention_query_vector.size()))
+        S_softmax_document = softmax(S, axis=2, f= self.softmax_function)
+        # print("S_softmax_document" + str(S_softmax_document.size()))
+        S_attention_document = S_softmax_document
+        # print("S_softmax_document permuted" + str(S_softmax_document.size()))
         return None,S_attention_document,b_attention_query_vector,None
 
 

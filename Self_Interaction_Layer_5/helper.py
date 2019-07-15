@@ -10,13 +10,25 @@ import numpy as np
 torch.manual_seed(4)
 np.random.seed(4)
 
+def softmax(input, axis=1, f=None):
+    input_size = input.size()
+
+    trans_input = input.transpose(axis, len(input_size)-1)
+    trans_size = trans_input.size()
+
+    input_2d = trans_input.contiguous().view(-1, trans_size[-1])
+
+    soft_max_2d = f(input_2d)
+
+    soft_max_nd = soft_max_2d.view(*trans_size)
+    return soft_max_nd.transpose(axis, len(input_size)-1)
 
 
 
 class queryAwareDocument(nn.Module):
-    def __init__(self, qad_rep='method_1'):
+    def __init__(self):
         super(queryAwareDocument, self).__init__()
-        self.qad_rep = qad_rep
+        # self.qad_rep = qad_rep
         self.softmax_f = torch.nn.Softmax()
 
     def forward(self, passage_outputs, question_outputs, b_attention_query_vector):
@@ -31,31 +43,46 @@ class queryAwareDocument(nn.Module):
         # if self.qad_rep== 'method_2':
         #     softmax_col = softmax(bilinear_comp, axis = 2, f = self.softmax_f)
         #     max_sofmax_col, _ = torch.max(softmax_col, dim = 2)
+
+        # print("passage_outputs" + str(passage_outputs.size()))
         passage_outputs_list = torch.unbind(passage_outputs, 0)
+        # print("passage_outputs_list")
+        # print("b_attention_query_vector" + str(b_attention_query_vector.size()))
         max_softmax_col_list = torch.unbind(b_attention_query_vector, 0)
+        # print("max_softmax_col_list" + str(len(max_softmax_col_list)))
+        # print(max_softmax_col_list)
 
         temp_rep = []
         for i in range(len(max_softmax_col_list)):
             temp_softmax = torch.unsqueeze(max_softmax_col_list[i], dim=0)
-            temp_rep.append(torch.mm(temp_softmax, passage_outputs_list[i]))
+            temp_softmax = temp_softmax.permute(0,2,1)
+            # print("temp_softmax " + str(temp_softmax.size()))
+            # print("passage_outputs_list[i] " + str(passage_outputs_list[i].size()))
+            passage_output_single = torch.unsqueeze(passage_outputs_list[i],dim = 0)
+            temp_rep.append(torch.bmm(temp_softmax, passage_output_single))
 
-
+        # print("temp_rep " + str(temp_rep.size()))
         qad_rep_vec = torch.stack(temp_rep, 0)
+        # print("qad_rep_vec " + str(qad_rep_vec.size()))
         qad_rep_vec = torch.squeeze(qad_rep_vec)
-        return qad_rep_vec, None
+        # print("qad_rep_vec " + str(qad_rep_vec.size()))
+        return qad_rep_vec
 
 
 class documentAwareQuery(nn.Module):
-    def __init__(self, daq_rep='method1'):
+    def __init__(self):
         super(documentAwareQuery, self).__init__()
-        self.daq_rep = daq_rep
+        # self.daq_rep = daq_rep
         self.softmax_f = torch.nn.Softmax()
     def forward(self, passage_outputs, question_outputs, S_attention_document):
         # if self.daq_rep == 'method1':
-        new_bilinear_comp = softmax(bilinear_comp, axis=2, f = self.softmax_f)
 
+        # print("S_attention_document" + str(S_attention_document.size()))
+        new_bilinear_comp = softmax(S_attention_document, axis=2, f = self.softmax_f)
+        # print("new_bilinear_comp" + str(new_bilinear_comp.size()))
+        # print("question_outputs" + str(question_outputs.size()))
         daq_rep = torch.bmm(new_bilinear_comp, question_outputs)
-        return None, daq_rep
+        return  daq_rep
 
         # if self.daq_rep== 'method2':
         #     max_sofmax_col, _ = torch.max(softmax_col, dim = 1)
@@ -76,7 +103,7 @@ class bidaf_self_match(nn.Module):
     #Use the query_aware context representation along with passage vector representation.
 
     def __init__(self, input_size, hidden_size, num_layers=1, bidirectional=True, dropout=0, batch_first=True):
-        super(bidaf_selfmatch, self).__init__()
+        super(bidaf_self_match, self).__init__()
 
         self.bidirectional_encoder_1 = torch.nn.GRU(input_size = 8*input_size, hidden_size = hidden_size,
                                     num_layers = num_layers,
@@ -93,7 +120,7 @@ class bidaf_self_match(nn.Module):
 
 
     def forward(self, passage_vectors, query_vectors, query_aware_passage_rep ,query_aware_passage_mat, passage_aware_query_rep, passage_aware_query_mat):
-
+# passage_representation,question_represenation,query_aware_document_rep_vector,None,None,document_aware_query_rep_matrix
         passage_dot_qap_rep = passage_vectors * passage_aware_query_mat
 
         temp = torch.unsqueeze(query_aware_passage_rep, dim=1)
@@ -106,8 +133,8 @@ class bidaf_self_match(nn.Module):
 
         batch_size = passage_vectors.size()[0]
         hidden_size = 100
-        h_0 = torch.autograd.Variable(torch.zeros(2, batch_size, hidden_size).type(torch.cuda.FloatTensor), requires_grad=False)
-        h_0_2 = torch.autograd.Variable(torch.zeros(2, batch_size, hidden_size).type(torch.cuda.FloatTensor), requires_grad=False)
+        h_0 = torch.autograd.Variable(torch.zeros(2, batch_size, hidden_size).type(torch.FloatTensor), requires_grad=False)
+        h_0_2 = torch.autograd.Variable(torch.zeros(2, batch_size, hidden_size).type(torch.FloatTensor), requires_grad=False)
         #c_0 = Variable(torch.zeros(2, batch_size, hidden_size), requires_grad=False)
         temp_outputs, _ = self.bidirectional_encoder_1(G, h_0)
         self_match_outputs, _ = self.bidirectional_encoder_2(temp_outputs, h_0_2)

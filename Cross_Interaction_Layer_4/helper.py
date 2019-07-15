@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
-
+import torch.autograd as autograd
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 import pickle
 import os

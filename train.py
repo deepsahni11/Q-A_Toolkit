@@ -31,6 +31,7 @@ class Train_Model(nn.Module):
         self.print_every = self.config.print_every
         self.max_context_length = self.config.max_context_length
         self.max_question_length = self.config.max_question_length
+        self.max_char_length = self.config.max_char_length
         self.model_dir = self.config.model_dir
         self.early_stop = self.config.early_stop
         self.print_and_validate_every = self.config.print_and_validate_every
@@ -62,7 +63,7 @@ class Train_Model(nn.Module):
 
 #         tic = time.time()
 
-        for batch in get_batch_generator(self.data_dir, self.names, self.batch_size, self.max_context_length, self.max_question_length,prefix):
+        for batch in get_batch_generator(self.data_dir, self.names, self.batch_size, self.max_context_length, self.max_question_length,self.max_char_length,prefix):
 
             _,start_pos_prediction, end_pos_prediction = self.test_one_batch(batch)
 
@@ -93,8 +94,6 @@ class Train_Model(nn.Module):
         f1_total /= example_num
         em_total /= example_num
 
-#         toc = time.time()
-#         logging.info("Calculating F1/EM for %i examples in %s set took %.2f seconds" % (example_num, dataset, toc-tic))
 
         return f1_total, em_total
     def get_validation_loss(self,prefix):
@@ -103,18 +102,12 @@ class Train_Model(nn.Module):
 #         loss_per_batch, batch_lengths = [], []
         total_validation_loss = 0.0
         validation_set_size = 0
-        for batch in get_batch_generator(self.data_dir, self.names, self.batch_size, self.max_context_length, self.max_question_length,prefix):
+        for batch in get_batch_generator(self.data_dir, self.names, self.batch_size, self.max_context_length, self.max_question_length,self.max_char_length,prefix):
 
             validation_batch_loss, _, _ = self.test_one_batch(batch)
             validation_set_size += batch.batch_size
             total_validation_loss += validation_batch_loss
-#             batch_lengths.append(curr_batch_size)
-#             i += 1
-#             if i == 10:
-#                 break
-#         total_num_examples = sum(batch_lengths)
-#         toc = time.time()
-#         print(validation_set_size)
+
 
         validation_loss = total_validation_loss / validation_set_size
 #         print "Computed validation loss = %f " % (validation_loss)
@@ -123,16 +116,19 @@ class Train_Model(nn.Module):
 
     def get_data(self, batch, is_train):
 
-        question_word_index_batch = batch.question_word_index_batch
-
-        context_word_index_batch = batch.context_word_index_batch
-
+        context_batch_char_indexes = batch.context_char_index_batch
+        question_batch_char_indexes = batch.question_char_index_batch
+        question_batch_word_indexes = batch.question_word_index_batch
+        context_batch_word_indexes = batch.context_word_index_batch
         span_tensor_batch = batch.span_tensor_batch
+        # context_indexes_batch = batch.context_indexes_batch
+        # questions_indexes_batch = batch.questions_indexes_batch
+        # answer_indexes_batch = batch.answer_indexes_batch
 
         if is_train:
-            return context_word_index_batch, question_word_index_batch,span_tensor_batch
+            return context_batch_word_indexes,context_batch_char_indexes,question_batch_word_indexes,question_batch_char_indexes,span_tensor_batch
         else:
-            return context_word_index_batch, question_word_index_batch
+            return context_batch_word_indexes,context_batch_char_indexes,question_batch_word_indexes,question_batch_char_indexes
 
     def get_grad_norm(self, parameters, norm_type=2):
         parameters = list(filter(lambda p: p.grad is not None, parameters))
@@ -155,13 +151,13 @@ class Train_Model(nn.Module):
 
         # self.model.eval()
 
-        context_word_index_batch, question_word_index_batch,  span_tensor_batch = self.get_data(batch,True)
+        # context_word_index_batch, question_word_index_batch,  span_tensor_batch,context_tokens_batch,questions_tokens_batch,answer_tokens_batch
+        context_batch_word_indexes,context_batch_char_indexes,question_batch_word_indexes,question_batch_char_indexes,span_tensor_batch = self.get_data(batch,True)
 
-
-        context_word_index_padded_per_batch = Variable(pad_data(context_word_index_batch))
+        context_word_index_padded_per_batch = Variable(pad_data(context_batch_word_indexes))
 #         print(context_word_index_padded_per_batch)
         context_word_index_padded_per_batch.requires_grad = False
-        question_word_index_padded_per_batch = Variable(pad_data(question_word_index_batch))
+        question_word_index_padded_per_batch = Variable(pad_data(question_batch_word_indexes))
         question_word_index_padded_per_batch.requires_grad = False
 
 
@@ -178,8 +174,8 @@ class Train_Model(nn.Module):
         span_tensor_batch = Variable(span_tensor_batch)
 
         span_tensor_batch.requires_grad = False
-
-        loss,start_index_prediction, end_index_prediction = self.model(context_word_index_padded_per_batch,context_word_mask_per_batch_new, question_word_index_padded_per_batch, question_word_mask_per_batch_new, span_tensor_batch)
+# context_batch_word_indexes,context_batch_char_indexes,context_batch_word_mask,question_batch_word_indexes,question_batch_char_indexes,question_batch_word_mask
+        loss,start_index_prediction, end_index_prediction = self.model(context_word_index_padded_per_batch,context_batch_char_indexes,context_word_mask_per_batch_new, question_word_index_padded_per_batch,question_batch_char_indexes, question_word_mask_per_batch_new, span_tensor_batch)
 
         # self.model.train()
 
@@ -189,14 +185,12 @@ class Train_Model(nn.Module):
 
         # self.model.train()
         self.optimizer.zero_grad()
-        context_word_index_batch, question_word_index_batch,  span_tensor_batch = self.get_data(batch,True)
-        # print(context_word_index_batch, question_word_index_batch,  span_tensor_batch)
+        context_batch_word_indexes,context_batch_char_indexes,question_batch_word_indexes,question_batch_char_indexes,span_tensor_batch = self.get_data(batch,True)
 
-
-
-        context_word_index_padded_per_batch = Variable(pad_data(context_word_index_batch))
+        context_word_index_padded_per_batch = Variable(pad_data(context_batch_word_indexes))
+#         print(context_word_index_padded_per_batch)
         context_word_index_padded_per_batch.requires_grad = False
-        question_word_index_padded_per_batch = Variable(pad_data(question_word_index_batch))
+        question_word_index_padded_per_batch = Variable(pad_data(question_batch_word_indexes))
         question_word_index_padded_per_batch.requires_grad = False
 
 
@@ -213,18 +207,17 @@ class Train_Model(nn.Module):
         span_tensor_batch = Variable(span_tensor_batch)
 
         span_tensor_batch.requires_grad = False
-
-        # print(context_word_index_padded_per_batch.size())
-        # print(context_word_mask_per_batch_new.size())
-        # print(question_word_index_padded_per_batch.size())
-        # print(question_word_mask_per_batch_new.size())
-        # print(span_tensor_batch.size())
-
-        loss,_,_ = self.model(context_word_index_padded_per_batch,context_word_mask_per_batch_new, question_word_index_padded_per_batch, question_word_mask_per_batch_new, span_tensor_batch)
+# context_batch_word_indexes,context_batch_char_indexes,context_batch_word_mask,question_batch_word_indexes,question_batch_char_indexes,question_batch_word_mask
+        loss,_,_ = self.model(context_word_index_padded_per_batch,context_batch_char_indexes,context_word_mask_per_batch_new, question_word_index_padded_per_batch,question_batch_char_indexes, question_word_mask_per_batch_new, span_tensor_batch)
 
 
-        # print(loss)
 
+        # span_tensor_batch = Variable(span_tensor_batch)
+        #
+        # span_tensor_batch.requires_grad = False
+        #
+        #
+        # loss,_,_ = self.model(context_word_index_padded_per_batch,context_word_mask_per_batch_new, question_word_index_padded_per_batch, question_word_mask_per_batch_new, span_tensor_batch)
 
         loss.backward()
 
@@ -257,7 +250,7 @@ class Train_Model(nn.Module):
         for epoch in range(200):
             total_loss = 0.0
             epoch_tic = time.time()
-            for batch in get_batch_generator(self.data_dir, self.names, self.batch_size, self.max_context_length, self.max_question_length,"train"):
+            for batch in get_batch_generator(self.data_dir, self.names, self.batch_size, self.max_context_length, self.max_question_length,self.max_char_length,"train"):
 
                 global_step += 1
                 iter_tic = time.time()

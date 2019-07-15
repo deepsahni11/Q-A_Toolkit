@@ -48,16 +48,18 @@ class Bidaf_self_interaction(nn.Module):
         super(Bidaf_self_interaction, self).__init__()
 
         self.config = config
-        self.self_match = bidaf_self_match(self.config.input_size, self.config.hidden_size, num_layers=1, bidirectional=True, dropout=0, batch_first=True)
+        self.self_match = bidaf_self_match(self.config.hidden_dim, self.config.hidden_dim, num_layers=1, bidirectional=True, dropout=0, batch_first=True)
 
-        self.document_aware_query = documentAwareQuery(self.config.daq_rep)
-        self.query_aware_document = queryAwareDocument(self.config.qad_rep)
+        self.document_aware_query = documentAwareQuery()
+        self.query_aware_document = queryAwareDocument()
 
-    def forward(self,passage_representation, question_represenation, b_attention_query_vector,S_attention_document):
-        document_aware_query_rep_matrix = self.document_aware_query(passage_representation, question_represenation, b_attention_query_vector)
-        query_aware_document_rep_vector = self.query_aware_document(passage_representation, question_represenation, S_attention_document)
+    def forward(self,query_attention_matrix,document_attention_matrix,query_attention_vector,document_attention_vector,question_representation, passage_representation,context_batch_word_mask):
+
+
+        document_aware_query_rep_matrix = self.document_aware_query(passage_representation, question_representation,document_attention_matrix )
+        query_aware_document_rep_vector = self.query_aware_document(passage_representation, question_representation,query_attention_vector )
 # passage_vectors, query_vectors, query_aware_passage_rep ,query_aware_passage_mat, passage_aware_query_rep, passage_aware_query_mat
-        self_match_representation = self.self_match(passage_representation,question_represenation,query_aware_document_rep_vector,None,None,document_aware_query_rep_matrix)
+        self_match_representation = self.self_match(passage_representation,question_representation,query_aware_document_rep_vector,None,None,document_aware_query_rep_matrix)
 
         return self_match_representation
 
