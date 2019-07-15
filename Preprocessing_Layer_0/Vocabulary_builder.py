@@ -75,7 +75,7 @@ class Vocabulary():
 
 
         for filename in self.vocab_input_files:
-            with open(filename,'r', encoding = 'utf-8') as file_input:
+            with codecs.open(filename,'r', encoding = 'utf-8') as file_input:
 
                 for line in file_input:
                     words = self.normalize_answer(line).strip().split()
@@ -118,4 +118,4 @@ class Vocabulary():
 
         dict_all = {"word_to_index" : self.word_to_index, "char_to_index" : self.char_to_index,"index_to_word": self.index_to_word, "index_to_char": self.index_to_char}
 
-        pickle.dump(dict_all, open(os.path.join(data_path, "dictionaries.pkl"), "wb")) ## creates dictionaries and stores in memory as pickle files
+        pickle.dump(dict_all, codecs.open(os.path.join(data_path, "dictionaries.pkl"), "wb")) ## creates dictionaries and stores in memory as pickle files

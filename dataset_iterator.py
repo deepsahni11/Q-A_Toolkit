@@ -14,7 +14,7 @@ import tqdm as tqdm
 import numpy as np
 torch.manual_seed(4)
 np.random.seed(4)
-
+import codecs
 import numpy as np
 from six.moves import xrange
 
@@ -60,7 +60,7 @@ def index_files_using_char_to_index(filename, _dict, max_words, max_chars):
 
 def index_files_using_word_to_index(filename, _dict, max_words):
 
-    f = open(filename, "r", encoding="utf-8")
+    f = codecs.open(filename, "r", encoding="utf-8")
 
     lines = f.readlines()
     lines  = [l.lower() for l in lines]
@@ -148,7 +148,7 @@ def get_batch_generator(data_dir,names, batch_size, max_context_length, max_ques
 
     """
 
-    with open(os.path.join(data_dir , "dictionaries.pkl"), "rb") as input_file:
+    with codecs.open(os.path.join(data_dir , "dictionaries.pkl"), "rb") as input_file:
         dictionaries = pickle.load(input_file)
     word_to_index = dictionaries["word_to_index"]
     char_to_index = dictionaries["char_to_index"]
@@ -157,9 +157,19 @@ def get_batch_generator(data_dir,names, batch_size, max_context_length, max_ques
     question_path_train = os.path.join(data_dir, prefix +  ".question")
     answer_path_train = os.path.join(data_dir, prefix +  ".answer_text")
 
+<<<<<<< HEAD
     context_tokens = open(context_path_train, "r", encoding="utf-8").readlines()
     question_tokens =  open(question_path_train, "r", encoding="utf-8").readlines()
     answer_tokens = open(answer_path_train, "r", encoding="utf-8").readlines()
+=======
+    context_tokens = codecs.open(context_path_train, "r", encoding="utf-8").readlines()
+    question_tokens =  codecs.open(question_path_train, "r", encoding="utf-8").readlines()
+    answer_tokens = codecs.open(answer_path_train, "r", encoding="utf-8").readlines()
+#         print(question_tokens)
+
+#     lines = f.readlines()
+#     lines  = [l.lower() for l in lines]
+>>>>>>> 105403f954a84050340575717031b1987962839a
 
     context_word_index_old = index_files_using_word_to_index(context_path_train, word_to_index, max_context_length)
     question_word_index_old = index_files_using_word_to_index(question_path_train, word_to_index, max_question_length)
@@ -168,10 +178,10 @@ def get_batch_generator(data_dir,names, batch_size, max_context_length, max_ques
     question_char_index_old = index_files_using_char_to_index(question_path_train, char_to_index, max_question_length, max_char_length)
 
     answer_start_path = os.path.join(data_dir  + prefix +  ".answer_start")
-    answer_start_list = open(answer_start_path, "r", encoding="utf-8").readlines()
+    answer_start_list = codecs.open(answer_start_path, "r", encoding="utf-8").readlines()
 
     answer_end_path = os.path.join(data_dir + prefix +  ".answer_end")
-    answer_end_list = open(answer_end_path, "r", encoding="utf-8").readlines()
+    answer_end_list = codecs.open(answer_end_path, "r", encoding="utf-8").readlines()
 
 
     context_tokens = context_tokens[0:100]

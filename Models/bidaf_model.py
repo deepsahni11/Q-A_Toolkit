@@ -11,10 +11,10 @@ from torch import autograd
 import Embedding_Layer_1.embedding as embedding
 import Encoding_Layer_3.encoding_layer as encoding_layer
 import Cross_Interaction_Layer_4.bilinear_compute as bilinear_compute
-import Embedding_Combination_Layer(2).encoding_combination_layer as encoding_combination_layer
+import Embedding_Combination_Layer_2.encoding_combination_layer as encoding_combination_layer
 import Cross_Interaction_Layer_4.query_aware_document_representation as query_aware_document_representation
 import Cross_Interaction_Layer_4.document_aware_query_representation as document_aware_query_representation
-import Self-Interaction_Layer(5).self_match as self_match
+import Self-Interaction_Layer_5.self_match as self_match
 import dataset_iterator_squad
 import Output_Layer_10.predict_start as predict_start
 import Output_Layer_10.predict_end as predict_end
@@ -164,7 +164,7 @@ class BiDAF(nn.Module):
         encoded_query   = self.word_embed_mat(query_batches["token"])
 
         temp1 = content_batches["tokenchar_"]
-        temp1_size = content_batches["token_char"].size()
+        temp1_size = content_batches["tokenchar_"].size()
         temp1 = temp1.view(self.config.batch_size, -1)
         encoded_content_char = self.char_embed_mat(temp1)
         encoded_content_char = encoded_content_char.view(temp1_size[0], temp1_size[1], temp1_size[2], -1)

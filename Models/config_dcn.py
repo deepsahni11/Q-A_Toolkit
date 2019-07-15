@@ -5,10 +5,17 @@ class Config(object):
 
 config = Config()
 # E:\Internships_19\Internship(Summer_19)\Q&A_Toolkit\Dynamic_Coattention_Networks\Models\saved_models
+<<<<<<< HEAD:Models/config_dcn.py
 config.data_dir = "E:\\Internships_19\\Internship(Summer_19)\\Q&A_Toolkit\\Dataset_analysis\\SQuAD\\"
 config.model_dir = "E:\\Internships_19\\Internship(Summer_19)\\Q&A_Toolkit\\Dynamic_Coattention_Networks\\Models\\saved_models\\"
 # config.data_dir = "Dynamic_Coattention_Networks/data/"
 # config.model_dir = "Dynamic_Coattention_Networks/Models/saved_models/"
+=======
+# config.data_dir = "E:\\Internships_19\\Internship(Summer_19)\\Q&A_Toolkit\\Dataset_analysis\\SQuAD\\"
+# config.model_dir = "E:\\Internships_19\\Internship(Summer_19)\\Q&A_Toolkit\\Dynamic_Coattention_Networks\\Models\\saved_models\\"
+config.data_dir = "data/"
+config.model_dir = "Models/saved_models/"
+>>>>>>> 105403f954a84050340575717031b1987962839a:Models/config.py
 config.word_embedding_size = 100
 config.hidden_dim = 100
 # config.dropout_ratio = 0.15

@@ -31,7 +31,7 @@ class Vocab:
         self.data_path = data_path
         
         for filename in self.vocab_input_files:
-            with open(self.data_path + filename,'r', encoding = 'utf-8') as file_input:
+            with codecs.open(self.data_path + filename,'r', encoding = 'utf-8') as file_input:
                 
                 for line in tqdm.tqdm(file_input):
                     words = line.strip().split()
@@ -78,7 +78,7 @@ class Vocab:
         self.index_to_word=dict_all["in_word"]
         self.index_to_char=dict_all["in_char"]
         
-        cPickle.dump(dict_all, open(os.path.join(data_path, "dictionaries.pkl"), "wb"))
+        cPickle.dump(dict_all, codecs.open(os.path.join(data_path, "dictionaries.pkl"), "wb"))
         
     
 
@@ -88,7 +88,7 @@ class Vocab:
 
         glove_embeddings = os.path.join(embedding_dir, "glove.6B.100d.txt")
 
-        glove_embeddings = open(glove_embeddings,'r', encoding = 'utf-8')
+        glove_embeddings = codecs.open(glove_embeddings,'r', encoding = 'utf-8')
 
         temp_embeddings = []
 
@@ -121,8 +121,8 @@ class Vocab:
 
         self.char_embeddings = char_embeddings
 
-        cPickle.dump(char_embeddings, open(os.path.join(embedding_dir, "char_embeddings" + ".pkl"), "wb")) 
-        cPickle.dump(temp_embeddings, open(os.path.join(embedding_dir, "word_embeddings" + str(word_embedding_size) + ".pkl"), "wb"))
+        cPickle.dump(char_embeddings, codecs.open(os.path.join(embedding_dir, "char_embeddings" + ".pkl"), "wb")) 
+        cPickle.dump(temp_embeddings, codecs.open(os.path.join(embedding_dir, "word_embeddings" + str(word_embedding_size) + ".pkl"), "wb"))
         return self.word_embeddings, self.char_embeddings
         
     def convert_file_to_tokens(self, filename, _dict, max_words):
@@ -186,7 +186,7 @@ class Vocab:
         for f in answer_files:
             read_path = os.path.join(datapath, f)
             write_path = os.path.join(datapath, f + ".txt_pkl.pkl")
-            lines = open(read_path, "r",encoding='utf-8').readlines()
+            lines = codecs.open(read_path, "r",encoding='utf-8').readlines()
             temp = []
             for l in lines:
                 if "text" not in read_path:
@@ -197,14 +197,14 @@ class Vocab:
             if "train" in write_path:
                 train = temp[7602:]
                 valid = temp[:7602]
-                write_file = open(write_path, "wb")
+                write_file = codecs.open(write_path, "wb")
                 cPickle.dump(train, write_file)
                 valid_path = write_path.replace("train", "validation")
-                valid_file = open(valid_path, "wb")
+                valid_file = codecs.open(valid_path, "wb")
                 cPickle.dump(valid, valid_file)
             else:
                 test_path = write_path.replace("validation", "test")
-                test_file = open(test_path, "wb")
+                test_file = codecs.open(test_path, "wb")
                 cPickle.dump(temp, test_file)
         
         
@@ -215,14 +215,14 @@ class Vocab:
             if "train" in write_path:
                 valid = temp[:7602]
                 train = temp[7602:]
-                write_file = open(write_path, "wb")
+                write_file = codecs.open(write_path, "wb")
                 cPickle.dump(train, write_file)
                 valid_path = write_path.replace("train", "validation")
-                valid_file = open(valid_path, "wb")
+                valid_file = codecs.open(valid_path, "wb")
                 cPickle.dump(valid, valid_file)
             else:
                 test_path = write_path.replace("validation", "test")
-                test_file = open(test_path, "wb")
+                test_file = codecs.open(test_path, "wb")
                 cPickle.dump(temp, test_file)
                 #print(train)
         
@@ -236,14 +236,14 @@ class Vocab:
                 valid = temp[:7602]
                 train = temp[7602:]
                 
-                write_file = open(write_path, "wb")
+                write_file = codecs.open(write_path, "wb")
                 cPickle.dump(train, write_file)
                 valid_path = write_path.replace("train", "validation")
-                valid_file = open(valid_path, "wb")
+                valid_file = codecs.open(valid_path, "wb")
                 cPickle.dump(valid, valid_file)
             else:
                 test_path = write_path.replace("validation", "test")
-                test_file = open(test_path, "wb")
+                test_file = codecs.open(test_path, "wb")
                 cPickle.dump(temp, test_file)
 
 
