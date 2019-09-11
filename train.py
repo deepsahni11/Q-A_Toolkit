@@ -63,26 +63,53 @@ class Train_Model(nn.Module):
 
 #         tic = time.time()
 
-        for batch in get_batch_generator(self.data_dir, self.names, self.batch_size, self.max_context_length, self.max_question_length,self.max_char_length,prefix):
+        for batch in get_batch_generator(self.config,self.data_dir, self.names, self.batch_size, self.max_context_length, self.max_question_length,self.max_char_length,prefix):
 
             _,start_pos_prediction, end_pos_prediction = self.test_one_batch(batch)
 
             start_pos_prediction = start_pos_prediction.tolist()
             end_pos_prediction = end_pos_prediction.tolist()
 
+            # print("start_pos_prediction")
+            # print(start_pos_prediction)
+            # print("batch.answer_tokens_batch")
+            # print(batch.answer_tokens_batch)
+            # print(len(batch.answer_tokens_batch))
+
+
             for index, (pred_answer_start, pred_answer_end, true_answer_tokens) in enumerate(zip(start_pos_prediction, end_pos_prediction, batch.answer_tokens_batch)):
 
                 example_num += 1
                 pred_answer_tokens = batch.context_tokens_batch[index][pred_answer_start : pred_answer_end + 1]
+
+                # print("index")
+                # print(index)
+                # print("batch.context_tokens_batch[index]")
+                # print(batch.context_tokens_batch[index])
+                # print("pred_answer_start : pred_answer_end")
+                # print(pred_answer_start,pred_answer_end)
+                # print("pred_answer_tokens")
+                # print(pred_answer_tokens)
+                # print("true_answer_tokens")
+                # print(true_answer_tokens)
+
                 pred_answer = " ".join(pred_answer_tokens)
 
                 true_answer = " ".join(true_answer_tokens)
 
                 f1 = f1_score(pred_answer, true_answer)
                 em = exact_match_score(pred_answer, true_answer)
+                # print("f1")
+                # print(f1)
+                # print("em")
+                # print(em)
                 f1_total += f1
                 em_total += em
 
+                # print("f1_total")
+                # print(f1_total)
+                # print("em_total")
+                # print(em_total)
 
 
                 if num_samples != 0 and example_num >= num_samples:
@@ -94,18 +121,21 @@ class Train_Model(nn.Module):
         f1_total /= example_num
         em_total /= example_num
 
-
+        # print("f1_total, em_total")
+        # print(f1_total, em_total)
         return f1_total, em_total
+
+
     def get_validation_loss(self,prefix):
 #         logging.info("Calculating dev loss...")
 #         tic = time.time()
 #         loss_per_batch, batch_lengths = [], []
         total_validation_loss = 0.0
         validation_set_size = 0
-        for batch in get_batch_generator(self.data_dir, self.names, self.batch_size, self.max_context_length, self.max_question_length,self.max_char_length,prefix):
+        for batch in get_batch_generator(self.config,self.data_dir, self.names, self.batch_size, self.max_context_length, self.max_question_length,self.max_char_length,prefix):
 
             validation_batch_loss, _, _ = self.test_one_batch(batch)
-            validation_set_size += batch.batch_size
+            validation_set_size += batch.span_tensor_batch.size()[0]
             total_validation_loss += validation_batch_loss
 
 
@@ -175,9 +205,11 @@ class Train_Model(nn.Module):
 
         span_tensor_batch.requires_grad = False
 # context_batch_word_indexes,context_batch_char_indexes,context_batch_word_mask,question_batch_word_indexes,question_batch_char_indexes,question_batch_word_mask
-        loss,start_index_prediction, end_index_prediction = self.model(context_word_index_padded_per_batch,context_batch_char_indexes,context_word_mask_per_batch_new, question_word_index_padded_per_batch,question_batch_char_indexes, question_word_mask_per_batch_new, span_tensor_batch)
+        loss, start_index_prediction, end_index_prediction = self.model(context_word_index_padded_per_batch,context_batch_char_indexes,context_word_mask_per_batch_new, question_word_index_padded_per_batch,question_batch_char_indexes, question_word_mask_per_batch_new, span_tensor_batch)
 
         # self.model.train()
+        # print("loss, start_index_prediction, end_index_prediction")
+        # print(loss, start_index_prediction, end_index_prediction)
 
         return loss.item(),start_index_prediction, end_index_prediction
 
@@ -188,6 +220,10 @@ class Train_Model(nn.Module):
         context_batch_word_indexes,context_batch_char_indexes,question_batch_word_indexes,question_batch_char_indexes,span_tensor_batch = self.get_data(batch,True)
 
         context_word_index_padded_per_batch = Variable(pad_data(context_batch_word_indexes))
+
+        # print("context_word_index_padded_per_batch")
+        # print(context_word_index_padded_per_batch.size())
+
 #         print(context_word_index_padded_per_batch)
         context_word_index_padded_per_batch.requires_grad = False
         question_word_index_padded_per_batch = Variable(pad_data(question_batch_word_indexes))
@@ -210,8 +246,8 @@ class Train_Model(nn.Module):
 # context_batch_word_indexes,context_batch_char_indexes,context_batch_word_mask,question_batch_word_indexes,question_batch_char_indexes,question_batch_word_mask
         loss,_,_ = self.model(context_word_index_padded_per_batch,context_batch_char_indexes,context_word_mask_per_batch_new, question_word_index_padded_per_batch,question_batch_char_indexes, question_word_mask_per_batch_new, span_tensor_batch)
 
-
-
+        # print("Loss in train.py")
+        # print(loss)
         # span_tensor_batch = Variable(span_tensor_batch)
         #
         # span_tensor_batch.requires_grad = False
@@ -247,16 +283,18 @@ class Train_Model(nn.Module):
 
         loss_array = []
         logging.info("Beginning training loop...")
-        for epoch in range(200):
+        for epoch in range(20):
             total_loss = 0.0
             epoch_tic = time.time()
-            for batch in get_batch_generator(self.data_dir, self.names, self.batch_size, self.max_context_length, self.max_question_length,self.max_char_length,"train"):
+            for batch in get_batch_generator(self.config,self.data_dir, self.names, self.batch_size, self.max_context_length, self.max_question_length,self.max_char_length,"train"):
 
                 global_step += 1
                 iter_tic = time.time()
 
                 # print("Inside train")
                 train_batch_loss = self.train_one_batch(batch)
+                # print("train_batch_loss")
+                # print(train_batch_loss)
                 # print(train_batch_loss)
 #                 total_loss = total_loss + loss
 #                 loss_array.append(total_loss)
@@ -268,14 +306,17 @@ class Train_Model(nn.Module):
 
 #                     print(self.get_validation_loss("validation"))
                     validation_batch_loss = self.get_validation_loss("validation")
-
+                    # print("validation_batch_loss")
+                    # print(validation_batch_loss)
 
 
                     train_batch_f1, train_batch_em = self.get_f1_em_score("train", num_samples=100)
 
-
+                    # print("train_batch_f1, train_batch_em")
+                    # print(train_batch_f1, train_batch_em)
                     validation_batch_f1, validation_batch_em = self.get_f1_em_score("validation", num_samples=100)
-
+                    # print("validation_batch_f1, validation_batch_em")
+                    # print(validation_batch_f1, validation_batch_em)
 
 
 

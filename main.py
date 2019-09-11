@@ -1,11 +1,13 @@
-from Models.Bidirectional_attention_flow_model import * # changed
+# from Models.Bidirectional_attention_flow_model import *
+from Models.dynamic_coattention_model import *
 from Preprocessing_Layer_0.Vocabulary_builder import *
 from Preprocessing_Layer_0.Squad_processor import *
 from Preprocessing_Layer_0.Embedding_Matrix import *
 
 
 
-from Models.config_bidaf import * # changed
+# from Models.config_bidaf import *
+from Models.config_dcn import *
 from train import *
 import os
 
@@ -21,6 +23,8 @@ question_file = open(os.path.join(config.data_dir, 'train.question'), 'r', encod
 answer_text_file = open(os.path.join(config.data_dir,  'train.answer_text'), 'r', encoding= 'utf-8').readlines()
 answer_start_file = open(os.path.join(config.data_dir,  'train.answer_start'), 'r', encoding= 'utf-8').readlines()
 answer_end_file = open(os.path.join(config.data_dir,  'train.answer_end'), 'r', encoding= 'utf-8').readlines()
+
+
 
 with open(os.path.join(config.data_dir, "train.context" ), 'w', encoding='utf-8') as f:
     for item in context_file[8000:]:
@@ -58,16 +62,22 @@ vocab = Vocabulary([config.data_dir + "train.context",config.data_dir + "train.q
 vocab.create_vocabulary(0,config.vocab_size, config.data_dir)
 
 embedding = Embedding_Matrix(config)
-embedding.get_glove_embeddings(config.word_emb_size, config.char_emb_size ,config.data_dir)
+embedding.get_glove_embeddings(config.word_embedding_size, config.char_embedding_size ,config.data_dir)
 embedding.index_files_to_char_level_and_word_level(config.data_dir , config.max_words, config.max_chars)
-
+embedding_matrix = pickle.load(open(os.path.join(config.data_dir, "glove_word_embeddings" + ".pkl"), 'rb'))
 
 
 
 with autograd.set_detect_anomaly(True):
-    model = Bidaf_Model(config)
+    # model = Bidaf_Model(config)
+    model = DCN_Model(config,embedding_matrix)
+
+    if(config.use_gpu == True):
+        model = model.cuda()
+
     # config = Config()
     # model = model.cpu()
     train_model = Train_Model(config, model)
 
+    train_model = train_model.cuda()
     train_model.train()

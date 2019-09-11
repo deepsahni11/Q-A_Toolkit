@@ -121,14 +121,14 @@ class Embedding_Matrix(nn.Module):
 
 
         word_embeddings_index = {}
-        file = open(self.config.data_dir + "glove_embeddings100.txt", "r", encoding="utf-8")
+        file = open(self.config.data_dir + "glove_embeddings300.txt", "r", encoding="utf-8")
         for line in file:
             values = line.split(' ')
             word = values[0] ## The first entry is the word
             vector = np.asarray(values[1:], dtype='float32') ## These are the vectors representing the embedding for the word
             word_embeddings_index[word] = vector
         file.close()
-        word_embeddings_matrix = np.zeros((len(self.word_to_index), 100))
+        word_embeddings_matrix = np.zeros((len(self.word_to_index), self.config.word_embedding_size ))
         for word, i in self.word_to_index.items():
             embedding_vector = word_embeddings_index.get(word) ## This references the loaded embeddings dictionary
             if embedding_vector is not None:

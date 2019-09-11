@@ -152,12 +152,21 @@ class Highway_Maxout_Network(nn.Module):
         m_t2_output_resized, _ = m_t2_output.view(-1, self.hidden_dim, self.maxout_pool_size).max(2)  # b*m x l
 
         m_t3_input = torch.cat((m_t1_output_resized, m_t2_output_resized), 1)  # b*m x 2l
+        # print("m_t3_input")
+        # print(m_t3_input.size())
+        # print(m_t3_input)
+
         alpha1 = self.max_out_layer3(m_t3_input)  # b * m x p
+
+        # print("alpha1")
+        # print(alpha1.size())
+        # print(alpha1)
+
         alpha2, _ = alpha1.max(1)  # b*m
         alpha3 = alpha2.view(-1, max_word_length) # b x m
 
 
-        alpha3 = alpha3 + mask_matrix  # b x m
+        # alpha3 = alpha3 + mask_matrix  # b x m
 
 
         # alpha can be treated as probabilities that assign probability masses todifferent words in context. The word with
@@ -178,7 +187,24 @@ class Highway_Maxout_Network(nn.Module):
 
         ## loss is only calculated only on that the predicted index at i_th time-step which varies
         ## from the predicted index at time-step (i-1)_th time-step
+        # print("target")
+
+        # print("alpha3")
+        # print(alpha3.size())
+        # print(alpha3)
+        #
+        # print("target")
+        # print(target.size())
+        # # print(target.size())
+        # print(target)
+
         if target is not None:
             step_loss = self.loss(alpha3, target)  # b
+        # print("step_loss")
+        # print(step_loss)
+        # print("index_i")
+        # print(index_i)
+        # print("curr_mask_vector")
+        # print(curr_mask_vector)
 
         return index_i, curr_mask_vector, step_loss # all have dimension: b

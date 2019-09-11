@@ -1,5 +1,6 @@
 import torch
 from torch import nn
+import numpy as np
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
 

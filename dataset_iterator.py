@@ -1,6 +1,4 @@
 
-
-
 from __future__ import absolute_import
 from __future__ import division
 from torch import nn
@@ -20,18 +18,31 @@ from six.moves import xrange
 
 class Batch(nn.Module):
     """A class to hold the information needed for a training batch"""
-    def __init__(self,names,context_word_index_batch,context_char_index_batch,question_word_index_batch,question_char_index_batch, span_tensor_batch,context_tokens_batch,questions_tokens_batch,answer_tokens_batch):
+    def __init__(self,config,names,context_word_index_batch,context_char_index_batch,question_word_index_batch,question_char_index_batch, span_tensor_batch,context_tokens_batch,questions_tokens_batch,answer_tokens_batch):
 
         super(Batch, self).__init__()
+
+        self.config = config
         self.names = names
-        self.context_word_index_batch = context_word_index_batch
-        self.question_word_index_batch = question_word_index_batch
-        self.context_char_index_batch = context_char_index_batch
-        self.question_char_index_batch = question_char_index_batch
-        self.span_tensor_batch = span_tensor_batch
-        self.context_tokens_batch = context_tokens_batch
-        self.questions_tokens_batch = questions_tokens_batch
-        self.answer_tokens_batch = answer_tokens_batch
+        if(self.config.use_gpu == True):
+            self.context_word_index_batch = context_word_index_batch.cuda()
+            self.question_word_index_batch = question_word_index_batch.cuda()
+            self.context_char_index_batch = context_char_index_batch.cuda()
+            self.question_char_index_batch = question_char_index_batch.cuda()
+            self.span_tensor_batch = span_tensor_batch.cuda()
+            self.context_tokens_batch = context_tokens_batch.cuda()
+            self.questions_tokens_batch = questions_tokens_batch.cuda()
+            self.answer_tokens_batch = answer_tokens_batch.cuda()
+        else:
+            self.context_word_index_batch = context_word_index_batch
+            self.question_word_index_batch = question_word_index_batch
+            self.context_char_index_batch = context_char_index_batch
+            self.question_char_index_batch = question_char_index_batch
+            self.span_tensor_batch = span_tensor_batch
+            self.context_tokens_batch = context_tokens_batch
+            self.questions_tokens_batch = questions_tokens_batch
+            self.answer_tokens_batch = answer_tokens_batch
+
         self.batch_size = len(self.context_word_index_batch)
 
 def index_files_using_char_to_index(filename, _dict, max_words, max_chars):
@@ -81,7 +92,7 @@ def index_files_using_word_to_index(filename, _dict, max_words):
 
 
 
-def refill_batches(batches,batch_size,names, max_context_length, max_question_length,context_word_index,context_char_index,question_word_index,question_char_index,span_tensor,context_tokens,question_tokens,answer_tokens):
+def refill_batches(config,batches,batch_size,names, max_context_length, max_question_length,context_word_index,context_char_index,question_word_index,question_char_index,span_tensor,context_tokens,question_tokens,answer_tokens):
 
     """
 
@@ -106,11 +117,19 @@ def refill_batches(batches,batch_size,names, max_context_length, max_question_le
 
 
 
-
+    # count = 0
     # Make into batches and append to the list batches
-    for batch_start in xrange(0, len(examples[0][0]), batch_size):
+    for batch_start in xrange(0, len(examples[0][0]),batch_size):
 
-        # Note: each of these is a list length batch_size of lists of ints (except on last iter when it might be less than batch_size)
+        # # Note: each of these is a list length batch_size of lists of ints (except on last iter when it might be less than batch_size)
+        # span_tensor_batch_check = examples[0][4][batch_start:batch_start+batch_size]
+        # for i in range(batch_start,batch_start+batch_size):
+        #     if(span_tensor_batch_check[i][0].item() > config.max_context_length or span_tensor_batch_check[i][1].item() > config.max_context_length):
+        #         count = count + 1
+
+
+
+        # if(examples[0][4][batch_start])
         context_word_index_batch = examples[0][0][batch_start:batch_start+batch_size]
         context_char_index_batch = examples[0][1][batch_start:batch_start+batch_size]
         question_word_index_batch = examples[0][2][batch_start:batch_start+batch_size]
@@ -120,7 +139,30 @@ def refill_batches(batches,batch_size,names, max_context_length, max_question_le
         questions_tokens_batch = examples[0][6][batch_start:batch_start+batch_size]
         answer_tokens_batch = examples[0][7][batch_start:batch_start+batch_size]
 
-#         print("Batch " + str(batch_start + 1) + " loaded")
+        # batch_start = batch_size + count
+        # count  = 0
+        #
+        # print(batch_size)
+        # print(span_tensor_batch.size())
+        #
+        # size = span_tensor_batch.size()[0]
+        # for i in range(size):
+        #     # print(i)
+        #     print(span_tensor_batch[i][0].item())
+        #     if(span_tensor_batch[i][0].item() > config.max_context_length or span_tensor_batch[i][1].item() > config.max_context_length):
+        #         del context_word_index_batch[i]
+        #         del context_char_index_batch[i]
+        #         del question_word_index_batch[i]
+        #         del question_char_index_batch[i]
+        #         # del span_tensor_batch[i]
+        #         torch.cat([span_tensor_batch[0:i], span_tensor_batch[i+1:]])
+        #         del context_tokens_batch[i]
+        #         del questions_tokens_batch[i]
+        #         del answer_tokens_batch[i]
+        #
+
+
+        # print("size of batch " + span_tensor_batch.size())
 
         batches.append((context_word_index_batch,context_char_index_batch, question_word_index_batch,question_char_index_batch,span_tensor_batch,context_tokens_batch,questions_tokens_batch,answer_tokens_batch))
 
@@ -135,7 +177,7 @@ def refill_batches(batches,batch_size,names, max_context_length, max_question_le
     return batches
 
 
-def get_batch_generator(data_dir,names, batch_size, max_context_length, max_question_length,max_char_length,prefix):
+def get_batch_generator(config,data_dir,names, batch_size, max_context_length, max_question_length,max_char_length,prefix):
     """
     This function returns a generator object that yields batches.
     The last batch in the dataset will be a partial batch.
@@ -157,11 +199,11 @@ def get_batch_generator(data_dir,names, batch_size, max_context_length, max_ques
     question_path_train = os.path.join(data_dir, prefix +  ".question")
     answer_path_train = os.path.join(data_dir, prefix +  ".answer_text")
 
-<<<<<<< HEAD
+# <<<<<<< HEAD
     context_tokens = open(context_path_train, "r", encoding="utf-8").readlines()
     question_tokens =  open(question_path_train, "r", encoding="utf-8").readlines()
     answer_tokens = open(answer_path_train, "r", encoding="utf-8").readlines()
-=======
+# =======
     context_tokens = codecs.open(context_path_train, "r", encoding="utf-8").readlines()
     question_tokens =  codecs.open(question_path_train, "r", encoding="utf-8").readlines()
     answer_tokens = codecs.open(answer_path_train, "r", encoding="utf-8").readlines()
@@ -169,13 +211,13 @@ def get_batch_generator(data_dir,names, batch_size, max_context_length, max_ques
 
 #     lines = f.readlines()
 #     lines  = [l.lower() for l in lines]
->>>>>>> 105403f954a84050340575717031b1987962839a
+# >>>>>>> 105403f954a84050340575717031b1987962839a
 
-    context_word_index_old = index_files_using_word_to_index(context_path_train, word_to_index, max_context_length)
-    question_word_index_old = index_files_using_word_to_index(question_path_train, word_to_index, max_question_length)
+    context_word_index = index_files_using_word_to_index(context_path_train, word_to_index, max_context_length)
+    question_word_index = index_files_using_word_to_index(question_path_train, word_to_index, max_question_length)
 
-    context_char_index_old = index_files_using_char_to_index(context_path_train, char_to_index, max_context_length, max_char_length)
-    question_char_index_old = index_files_using_char_to_index(question_path_train, char_to_index, max_question_length, max_char_length)
+    context_char_index = index_files_using_char_to_index(context_path_train, char_to_index, max_context_length, max_char_length)
+    question_char_index = index_files_using_char_to_index(question_path_train, char_to_index, max_question_length, max_char_length)
 
     answer_start_path = os.path.join(data_dir  + prefix +  ".answer_start")
     answer_start_list = codecs.open(answer_start_path, "r", encoding="utf-8").readlines()
@@ -184,22 +226,43 @@ def get_batch_generator(data_dir,names, batch_size, max_context_length, max_ques
     answer_end_list = codecs.open(answer_end_path, "r", encoding="utf-8").readlines()
 
 
-    context_tokens = context_tokens[0:100]
-    question_tokens = question_tokens[0:100]
-    answer_tokens = answer_tokens[0:100]
+    # context_tokens = context_tokens[0:50]
+    # question_tokens = question_tokens[0:50]
+    # answer_tokens = answer_tokens[0:50]
 
     answer_end = torch.from_numpy(np.array([int(i) for i in answer_end_list])).long()
     answer_start = torch.from_numpy(np.array([int(i) for i in answer_start_list])).long()
     answer_start = torch.unsqueeze(answer_start, 1)
     answer_end = torch.unsqueeze(answer_end, 1)
 
-    span_tensor_old = torch.cat((answer_start, answer_end), 1)
-    span_tensor = span_tensor_old[0:100]
-    context_word_index = context_word_index_old[0:100]
-    question_word_index = question_word_index_old[0:100]
-    context_char_index = context_char_index_old[0:100]
-    question_char_index = question_char_index_old[0:100]
+    span_tensor = torch.cat((answer_start, answer_end), 1)
+    # span_tensor = span_tensor_old[0:50]
+    # context_word_index = context_word_index_old[0:50]
+    # question_word_index = question_word_index_old[0:50]
+    # context_char_index = context_char_index_old[0:50]
+    # question_char_index = question_char_index_old[0:50]
 
+    length = len(span_tensor)
+    # print("length")
+    # print(length)
+    # print("context_word_index")
+    # print(len(context_word_index))
+    # print("span - t")
+    # print(span_tensor[length-1][0].item())
+    for i in range(length-1):
+        if(span_tensor[i][0].item() >= 250 or span_tensor[i][1].item() >= 250):
+
+            del context_word_index[i]
+            del context_char_index[i]
+            del question_word_index[i]
+            del question_char_index[i]
+            # del span_tensor_batch[i]
+            span_tensor = torch.cat([span_tensor[0:i], span_tensor[i+1:]])
+            del context_tokens[i]
+            del question_tokens[i]
+            del answer_tokens[i]
+    #
+    # print(span_tensor.size())
 
 
     batches = []
@@ -210,12 +273,31 @@ def get_batch_generator(data_dir,names, batch_size, max_context_length, max_ques
         if len(batches) == 0: # add more batches
             if(count > 2):
                 break
-            batches = refill_batches(batches,batch_size,names, max_context_length, max_question_length,context_word_index,context_char_index,question_word_index,question_char_index,span_tensor,context_tokens,question_tokens,answer_tokens)
+            batches = refill_batches(config,batches,batch_size,names, max_context_length, max_question_length,context_word_index,context_char_index,question_word_index,question_char_index,span_tensor,context_tokens,question_tokens,answer_tokens)
         if len(batches) == 0:
             break
 
         # Get next batch. These are all lists length batch_size
         (context_word_index_batch,context_char_index_batch, question_word_index_batch,question_char_index_batch,span_tensor_batch,context_tokens,question_tokens,answer_tokens) = batches.pop(0)
+
+
+        # print("context_word_index_batch")
+        # print("context_char_index_batch")
+        # print( "question_word_index_batch")
+        # print("question_char_index_batch")
+        # print("span_tensor_batch")
+        # print("context_tokens")
+        # print("question_tokens")
+        # print("answer_tokens")
+
+        # print(context_word_index_batch[1])
+        # print(context_char_index_batch.size())
+        # print( question_word_index_batch.size())
+        # print(question_char_index_batch.size())
+        # print(span_tensor_batch.size())
+        # print(context_tokens.size())
+        # print(question_tokens.size())
+        # print(answer_tokens.size())
 
 
         if(len(context_word_index_batch) == 0):
@@ -224,7 +306,7 @@ def get_batch_generator(data_dir,names, batch_size, max_context_length, max_ques
 
 
         # Make into a Batch object
-        batch = Batch(names,context_word_index_batch, context_char_index_batch,question_word_index_batch,question_char_index_batch, span_tensor_batch,context_tokens,question_tokens,answer_tokens)
+        batch = Batch(config,names,context_word_index_batch, context_char_index_batch,question_word_index_batch,question_char_index_batch, span_tensor_batch,context_tokens,question_tokens,answer_tokens)
 
         yield batch
 

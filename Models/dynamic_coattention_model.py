@@ -24,27 +24,27 @@ from Output_Layer_10.decoder import *
 
 class DCN_Model(nn.Module):
 
-    def __init__(self, config, embedding_matrix):
+    def __init__(self, config,embedding):
         super(DCN_Model, self).__init__()
         self.config = config
-        self.encoder = Encoding_Layer(self.config, embedding_matrix)
+        self.encoder = Encoding_Layer(self.config,embedding)
         self.cross_interaction = Cross_Interaction(self.config)
         self.self_interaction = Self_Interaction(self.config)
         self.decoder = Decoder(self.config)
 
-    def forward(self, context_word_indexes, context_word_mask, question_word_indexes, question_word_mask,span_tensor):
-        passage_representation = self.encoder(context_word_indexes, context_word_mask)
+    def forward(self, context_batch_word_indexes,context_batch_char_indexes,context_batch_word_mask,question_batch_word_indexes,question_batch_char_indexes,question_batch_word_mask,span_tensor_batch):
+        passage_representation = self.encoder(context_batch_word_indexes, context_batch_word_mask)
 
-        question_representation = self.encoder(question_word_indexes, question_word_mask)
+        question_representation = self.encoder(question_batch_word_indexes, question_batch_word_mask)
 
 
         # A_Q_matrix,A_D_matrix,A_Q_vector,A_D_vector = query_attention_matrix,document_attention_matrix,query_attention_vector,document_attention_vector
         query_attention_matrix,document_attention_matrix,query_attention_vector,document_attention_vector = self.cross_interaction(question_representation, passage_representation)
 
         # A_Q_matrix,A_D_matrix,A_Q_vector,A_D_vector,question_representation, context_representation,document_word_sequence_mask
-        U_matrix = self.self_interaction(query_attention_matrix,document_attention_matrix,query_attention_vector,document_attention_vector,question_representation, passage_representation,context_word_mask)
+        U_matrix = self.self_interaction(query_attention_matrix,document_attention_matrix,query_attention_vector,document_attention_vector,question_representation, passage_representation,context_batch_word_mask)
         # print(self.decoder(U_matrix, context_word_mask, span_tensor))
-        loss, index_start, index_end = self.decoder(U_matrix, context_word_mask, span_tensor)
+        loss, index_start, index_end = self.decoder(U_matrix, context_batch_word_mask, span_tensor_batch)
         # X = self.decoder(U_matrix, context_word_mask,span_tensor)
         # print(len(X), X)
         # print("Done Stop")

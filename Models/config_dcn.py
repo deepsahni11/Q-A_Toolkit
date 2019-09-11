@@ -5,18 +5,16 @@ class Config(object):
 
 config = Config()
 # E:\Internships_19\Internship(Summer_19)\Q&A_Toolkit\Dynamic_Coattention_Networks\Models\saved_models
-<<<<<<< HEAD:Models/config_dcn.py
-config.data_dir = "E:\\Internships_19\\Internship(Summer_19)\\Q&A_Toolkit\\Dataset_analysis\\SQuAD\\"
+# <<<<<<< HEAD:Models/config_dcn.py
+config.data_dir = "E:\\Internships_19\\Internship(Summer_19)\\Q&A_Toolkit\\Dynamic_Coattention_Networks\\data\\"
 config.model_dir = "E:\\Internships_19\\Internship(Summer_19)\\Q&A_Toolkit\\Dynamic_Coattention_Networks\\Models\\saved_models\\"
-# config.data_dir = "Dynamic_Coattention_Networks/data/"
-# config.model_dir = "Dynamic_Coattention_Networks/Models/saved_models/"
-=======
-# config.data_dir = "E:\\Internships_19\\Internship(Summer_19)\\Q&A_Toolkit\\Dataset_analysis\\SQuAD\\"
-# config.model_dir = "E:\\Internships_19\\Internship(Summer_19)\\Q&A_Toolkit\\Dynamic_Coattention_Networks\\Models\\saved_models\\"
-config.data_dir = "data/"
-config.model_dir = "Models/saved_models/"
->>>>>>> 105403f954a84050340575717031b1987962839a:Models/config.py
-config.word_embedding_size = 100
+
+# =======
+
+# config.data_dir = "data/"
+# config.model_dir = "Models/saved_models/"
+# >>>>>>> 105403f954a84050340575717031b1987962839a:Models/config.py
+
 config.hidden_dim = 100
 # config.dropout_ratio = 0.15
 config.encoder_type = "lstm"
@@ -26,17 +24,21 @@ config.decoder_type = "dcn"
 config.num_layers = 1
 config.max_context_length = 600
 config.max_question_length = 30
-config.word_embedding_size = 100
+config.word_embedding_size = 300
 config.char_embedding_size = 20
 config.max_words=700
+config.use_gpu = True
 config.lr = 0.001
 config.dropout = 0.15
 config.dropout_ratio = 0.15
 config.early_stop = 10
 config.vocab_size = 50000
-
-
+config.use_char_emb = False
+config.use_word_emb = True
 #vector with zeros for unknown words
+config.max_context_length = 250
+config.max_question_length = 30
+config.max_char_length = 5
 config.num_iterations = 2
 config.maxout_pool_size=16
 config.max_chars=10
@@ -48,7 +50,7 @@ config.max_grad_norm = 5.0
 config.batch_size = 20
 config.num_epochs = 2
 config.print_every = 100
-config.max_number_of_iterations = 5
+config.max_number_of_iterations = 2
 config.print_and_validate_every = 2
 # config.optim = "Adadelta"
 # config.decoder = "dcn"

@@ -214,4 +214,10 @@ class DCN_Dynamic_Decoder(nn.Module):
 
         # X = [loss, index_start, index_end]
         # print (X, len(X))
+        # print("loss")
+        # print(loss)
+        # print("index_start")
+        # print(index_start)
+        # print("index_end")
+        # print(index_end)
         return loss, index_start, index_end

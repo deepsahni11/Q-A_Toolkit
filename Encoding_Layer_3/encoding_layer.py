@@ -4,6 +4,8 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 import numpy as np
+import os
+import pickle
 from Encoding_Layer_3.helper import *
 torch.manual_seed(4)
 np.random.seed(4)
@@ -21,7 +23,7 @@ Encoding_Layer:
 
 
 class Encoding_Layer(nn.Module):
-    def __init__(self,config):
+    def __init__(self,config,embedding):
         super(Encoding_Layer, self).__init__()
         self.config = config
         self.use_char_emb = self.config.use_char_emb
@@ -29,23 +31,26 @@ class Encoding_Layer(nn.Module):
         self.data_dir = self.config.data_dir
 
         if(self.use_char_emb == True and self.use_word_emb == True):
-            self.emb_combination_size = self.config.word_emb_size + self.config.char_emb_out_size
+            self.emb_combination_size = self.config.word_embedding_size + self.config.char_embedding_size
         elif(self.use_char_emb == False and self.use_word_emb == True):
-            self.emb_combination_size = self.config.word_emb_size
+            self.emb_combination_size = self.config.word_embedding_size
         if(self.use_char_emb == True and self.use_word_emb == False):
-            self.emb_combination_size =  self.config.char_emb_out_size
+            self.emb_combination_size =  self.config.char_embedding_size
 
         if(self.config.encoder_type == "bi-lstm"):
-            self.encoder = nn.LSTM(input_size = self.emb_combination_size,hidden_size = self.config.hidden_dim,num_layers = self.config.num_layers,bidirectional = True,dropout = self.config.dropout,batch_first = True)
+            self.encoder_rnn = nn.LSTM(input_size = self.emb_combination_size,hidden_size = self.config.hidden_dim,num_layers = self.config.num_layers,bidirectional = True,dropout = self.config.dropout,batch_first = True)
         elif(self.config.encoder_type == "lstm"):
-            self.encoder = nn.LSTM(input_size = self.emb_combination_size,hidden_size = self.config.hidden_dim,num_layers = self.config.num_layers,bidirectional = False,dropout = self.config.dropout,batch_first = True)
+            self.encoder_rnn = nn.LSTM(input_size = self.emb_combination_size,hidden_size = self.config.hidden_dim,num_layers = self.config.num_layers,bidirectional = False,dropout = self.config.dropout,batch_first = True)
         elif(self.config.encoder_type == "bi-gru"):
-            self.encoder = nn.GRU(input_size = self.emb_combination_size,hidden_size = self.config.hidden_dim,num_layers = self.config.num_layers,bidirectional = True,dropout = self.config.dropout,batch_first = True)
+            self.encoder_rnn = nn.GRU(input_size = self.emb_combination_size,hidden_size = self.config.hidden_dim,num_layers = self.config.num_layers,bidirectional = True,dropout = self.config.dropout,batch_first = True)
         elif(self.config.encoder_type == "gru"):
-            self.encoder = nn.GRU(input_size = self.emb_combination_size,hidden_size = self.config.hidden_dim,num_layers = self.config.num_layers,bidirectional = False,dropout = self.config.dropout,batch_first = True)
+            self.encoder_rnn = nn.GRU(input_size = self.emb_combination_size,hidden_size = self.config.hidden_dim,num_layers = self.config.num_layers,bidirectional = False,dropout = self.config.dropout,batch_first = True)
 
+        self.embedding_matrix = get_pretrained_embedding(embedding)
         self.sentinel = nn.Parameter(torch.rand(self.config.hidden_dim))
         self.hidden_dim = self.config.hidden_dim
+
+
 
     def initHidden(self,batch_size):
         if(self.config.encoder_type == "bi-lstm"):
@@ -64,11 +69,13 @@ class Encoding_Layer(nn.Module):
         # c0 = Variable(torch.zeros(1, batch_size, self.hidden_dim), requires_grad = False) # Initial cell state
         return h0, c0
 
-    def forward(self, embedding_combination,word_sequence_mask):
+    def forward(self,word_sequence_indexes ,word_sequence_mask):
         #word_sequence_indexes, word_sequence_mask
-
+        # glove_words = pickle.load(open(os.path.join(self.data_dir, "glove_word_embeddings" + ".pkl"), 'rb'))
+        # print("glove")
+        # print(np.shape(glove_words))
         # word_sequence_packed is a tensor of dimension of B x m x l
-        batch_size = embedding_combination.size()[0]
+        batch_size = word_sequence_indexes.size()[0]
         #
         # initial_hidden_states = self.initHidden(batch_size)
         #
@@ -85,13 +92,23 @@ class Encoding_Layer(nn.Module):
 
         # All RNN modules accept packed sequences as inputs.
         # Input: word_sequence_embeddings has a dimension of B x m x l (l is the size of the glove_embedding/ pre-trained embedding/embedding_dim)
+        # glove_words = pickle.load(open(os.path.join(self.data_dir, "glove_word_embeddings" + ".pkl"), 'rb'))
+        # word_sequence_indexes = word_sequence_indexes.numpy()
+        # embedding = nn.Embedding(*word_sequence_indexes.shape)
+        # embedding.load_state_dict({'weight': glove_words})
+        # # embedding.weight = nn.Parameter(torch.from_numpy(word_sequence_indexes).float())
+        # embedding.weight.requires_grad = False
+
+        embedding_combination = self.embedding_matrix(word_sequence_indexes)
         packed_word_sequence_embeddings = pack_padded_sequence(embedding_combination,length_per_instance,batch_first=True,enforce_sorted=False)
 
 
 
         # nn.LSTM encoder gets an input of pack_padded_sequence of dimensions
         # since the input was a packed sequence, the output will also be a packed sequence
-        output, _ = self.encoder(packed_word_sequence_embeddings,initial_hidden_states)
+        # print(packed_word_sequence_embeddings)
+        # print(initial_hidden_states[0].size())
+        output, _ = self.encoder_rnn(packed_word_sequence_embeddings,initial_hidden_states)
 
 
         # Pads a packed batch of variable length sequences.
